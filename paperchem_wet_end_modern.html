@@ -1,0 +1,2015 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PaperChem — Wet-End Intelligence</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ── RESET & BASE ─────────────────────────────────────────────────────────── */
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  /* Brand palette */
+  --c1:#0ea5e9;   /* sky blue — primary */
+  --c2:#6366f1;   /* indigo */
+  --c3:#10b981;   /* emerald */
+  --c4:#f59e0b;   /* amber */
+  --c5:#ef4444;   /* red */
+  --c6:#8b5cf6;   /* violet */
+  --c7:#06b6d4;   /* cyan */
+
+  /* Surfaces */
+  --bg:#0f1117;
+  --bg2:#161b27;
+  --bg3:#1c2333;
+  --bg4:#242d40;
+  --glass:rgba(255,255,255,0.04);
+  --glass-border:rgba(255,255,255,0.08);
+
+  /* Text */
+  --t:#e8edf5;
+  --t2:#8b9ab5;
+  --t3:#4e5f7a;
+
+  /* Borders */
+  --b:rgba(255,255,255,0.07);
+  --b2:rgba(255,255,255,0.12);
+
+  /* Semantic — map to original vars so JS alerts still work */
+  --color-background-primary:var(--bg2);
+  --color-background-secondary:var(--bg3);
+  --color-background-tertiary:var(--bg);
+  --color-border-tertiary:var(--b);
+  --color-border-secondary:var(--b2);
+  --color-text-primary:var(--t);
+  --color-text-secondary:var(--t2);
+  --color-text-tertiary:var(--t3);
+  --color-background-info:rgba(14,165,233,0.12);
+  --color-text-info:#38bdf8;
+  --color-background-warning:rgba(245,158,11,0.12);
+  --color-text-warning:#fbbf24;
+  --color-background-danger:rgba(239,68,68,0.12);
+  --color-text-danger:#f87171;
+  --color-background-success:rgba(16,185,129,0.12);
+  --color-text-success:#34d399;
+
+  /* Legacy accent refs */
+  --accent:var(--c1);
+  --green:var(--c3);
+  --amber:var(--c4);
+  --red:var(--c5);
+  --purple:var(--c6);
+  --teal:var(--c7);
+
+  --tdanger:#f87171;
+  --twarn:#fbbf24;
+  --tsuccess:#34d399;
+  --tinfo:#38bdf8;
+
+  /* Radius */
+  --border-radius-lg:12px;
+  --border-radius-md:8px;
+  --font-sans:'Space Grotesk',system-ui,sans-serif;
+  --font-mono:'JetBrains Mono',monospace;
+
+  /* Glow utils */
+  --glow-blue:0 0 20px rgba(14,165,233,0.3);
+  --glow-green:0 0 20px rgba(16,185,129,0.25);
+  --glow-violet:0 0 20px rgba(139,92,246,0.25);
+}
+
+body{
+  font-family:var(--font-sans);
+  background:var(--bg);
+  color:var(--t);
+  font-size:13px;
+  line-height:1.5;
+}
+
+/* ── SR-ONLY ──────────────────────────────────────────────────────────────── */
+h2.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
+
+/* ── SHELL ────────────────────────────────────────────────────────────────── */
+.shell{display:flex;flex-direction:column;gap:0;min-height:600px;background:var(--bg)}
+
+/* ── TOP BAR ──────────────────────────────────────────────────────────────── */
+.top-bar{
+  background:var(--bg2);
+  border-bottom:1px solid var(--b);
+  padding:0 20px;
+  height:52px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  position:sticky;
+  top:0;
+  z-index:100;
+  backdrop-filter:blur(12px);
+}
+.top-bar::after{
+  content:'';
+  position:absolute;
+  bottom:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,var(--c1),var(--c2),var(--c7),transparent);
+  opacity:.5;
+}
+.logo{
+  font-size:17px;
+  font-weight:700;
+  letter-spacing:-.02em;
+  background:linear-gradient(135deg,#e8edf5 0%,var(--c1) 100%);
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+  background-clip:text;
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+.logo-icon{
+  width:28px;height:28px;
+  background:linear-gradient(135deg,var(--c1),var(--c2));
+  border-radius:7px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:14px;
+  -webkit-text-fill-color:#fff;
+  flex-shrink:0;
+}
+.logo span{color:var(--c1);-webkit-text-fill-color:var(--c1)}
+.logo-sub{font-size:11px;font-weight:400;color:var(--t3);letter-spacing:.02em;-webkit-text-fill-color:var(--t3);margin-left:4px}
+.live{
+  display:flex;align-items:center;gap:6px;
+  font-size:11px;color:var(--tsuccess);
+  background:rgba(16,185,129,0.1);
+  border:1px solid rgba(16,185,129,0.2);
+  padding:4px 10px;
+  border-radius:20px;
+  font-weight:500;
+}
+.live-dot{
+  width:6px;height:6px;border-radius:50%;
+  background:var(--c3);
+  box-shadow:0 0 6px var(--c3);
+  animation:blink 1.4s infinite;
+}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* ── LAYOUT ───────────────────────────────────────────────────────────────── */
+.main{display:flex;height:calc(100vh - 52px);min-height:560px}
+
+/* ── SIDEBAR ──────────────────────────────────────────────────────────────── */
+.sidebar{
+  width:210px;min-width:210px;
+  background:var(--bg2);
+  border-right:1px solid var(--b);
+  display:flex;flex-direction:column;
+  overflow-y:auto;
+  scrollbar-width:thin;
+  scrollbar-color:var(--bg4) transparent;
+}
+.nav-section{
+  padding:20px 14px 6px;
+  font-size:10px;font-weight:600;
+  color:var(--t3);
+  letter-spacing:.1em;
+  text-transform:uppercase;
+}
+.nav-section:first-child{padding-top:14px}
+.nav-item{
+  padding:8px 14px 8px 16px;
+  font-size:12px;font-weight:500;
+  cursor:pointer;
+  color:var(--t2);
+  border-left:2px solid transparent;
+  transition:all .15s;
+  display:flex;align-items:center;gap:8px;
+  position:relative;
+}
+.nav-item:hover{
+  background:var(--glass);
+  color:var(--t);
+}
+.nav-item.active{
+  background:linear-gradient(90deg,rgba(14,165,233,0.12),transparent);
+  color:var(--c1);
+  border-left-color:var(--c1);
+  text-shadow:0 0 20px rgba(14,165,233,0.5);
+}
+.nav-item::before{
+  content:'';width:5px;height:5px;
+  border-radius:50%;
+  background:currentColor;
+  opacity:.4;
+  flex-shrink:0;
+}
+.nav-item.active::before{opacity:1;box-shadow:0 0 6px currentColor}
+
+/* ── CONTENT ──────────────────────────────────────────────────────────────── */
+.content{
+  flex:1;overflow-y:auto;
+  padding:20px;
+  display:flex;flex-direction:column;gap:16px;
+  background:var(--bg);
+  scrollbar-width:thin;
+  scrollbar-color:var(--bg4) transparent;
+}
+
+.panel{display:none}
+.panel.active{display:flex;flex-direction:column;gap:16px}
+
+/* ── ROWS & GRIDS ─────────────────────────────────────────────────────────── */
+.row{display:flex;gap:14px;flex-wrap:wrap}
+.fg{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.fg3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.fg4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px}
+
+/* ── CARDS ────────────────────────────────────────────────────────────────── */
+.card{
+  background:var(--bg2);
+  border:1px solid var(--b);
+  border-radius:var(--border-radius-lg);
+  padding:16px;
+  position:relative;
+  overflow:hidden;
+  transition:border-color .2s;
+}
+.card:hover{border-color:var(--b2)}
+.card::before{
+  content:'';
+  position:absolute;
+  top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,var(--glass-border),transparent);
+}
+.card-sm{
+  background:var(--bg3);
+  border:1px solid var(--b);
+  border-radius:var(--border-radius-md);
+  padding:12px;
+  transition:border-color .2s;
+}
+.card-sm:hover{border-color:var(--b2)}
+.card-title{
+  font-size:10px;font-weight:600;
+  color:var(--t3);
+  letter-spacing:.1em;
+  text-transform:uppercase;
+  margin-bottom:12px;
+  display:flex;align-items:center;gap:6px;
+}
+.card-title::before{
+  content:'';
+  display:inline-block;
+  width:3px;height:10px;
+  border-radius:2px;
+  background:linear-gradient(180deg,var(--c1),var(--c2));
+}
+
+/* ── FORM ELEMENTS ────────────────────────────────────────────────────────── */
+label{
+  font-size:11px;font-weight:500;
+  color:var(--t3);
+  display:block;margin-bottom:4px;
+  letter-spacing:.02em;
+}
+input[type=number],select{
+  width:100%;
+  background:var(--bg3);
+  border:1px solid var(--b2);
+  border-radius:var(--border-radius-md);
+  color:var(--t);
+  font-family:var(--font-sans);
+  font-size:12px;
+  padding:7px 10px;
+  outline:none;
+  transition:border-color .2s, box-shadow .2s, background .2s;
+  appearance:none;
+  -webkit-appearance:none;
+}
+input[type=number]:hover,select:hover{
+  border-color:rgba(14,165,233,0.3);
+  background:var(--bg4);
+}
+input[type=number]:focus,select:focus{
+  border-color:var(--c1);
+  box-shadow:0 0 0 3px rgba(14,165,233,0.15);
+  background:var(--bg4);
+}
+input[type=range]{
+  width:100%;
+  accent-color:var(--c1);
+  height:4px;
+}
+select{
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%234e5f7a' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;
+  background-position:right 8px center;
+  padding-right:28px;
+}
+select option{background:var(--bg3);color:var(--t)}
+
+/* ── BUTTONS ──────────────────────────────────────────────────────────────── */
+.btn{
+  background:var(--bg3);
+  border:1px solid var(--b2);
+  border-radius:var(--border-radius-md);
+  color:var(--t);
+  font-size:12px;font-weight:500;
+  padding:8px 16px;
+  cursor:pointer;
+  font-family:var(--font-sans);
+  transition:all .15s;
+  display:inline-flex;align-items:center;gap:6px;
+  letter-spacing:.02em;
+}
+.btn:hover{
+  background:var(--bg4);
+  border-color:rgba(14,165,233,0.4);
+  color:var(--c1);
+}
+.btn:active{transform:scale(.98)}
+.btn-primary{
+  background:linear-gradient(135deg,var(--c1),var(--c2));
+  color:#fff;
+  border:none;
+  box-shadow:0 2px 12px rgba(14,165,233,0.3);
+}
+.btn-primary:hover{
+  background:linear-gradient(135deg,#0284c7,#4f46e5);
+  color:#fff;
+  box-shadow:0 4px 20px rgba(14,165,233,0.4);
+  transform:translateY(-1px);
+}
+.btn-sm{padding:5px 10px;font-size:11px;border-radius:6px}
+.btn-danger{
+  background:rgba(239,68,68,0.1);
+  color:#f87171;
+  border:1px solid rgba(239,68,68,0.25);
+}
+.btn-success{
+  background:rgba(16,185,129,0.1);
+  color:#34d399;
+  border:1px solid rgba(16,185,129,0.25);
+}
+
+/* ── METRIC CARDS ─────────────────────────────────────────────────────────── */
+.metric{
+  background:var(--bg3);
+  border:1px solid var(--b);
+  border-radius:var(--border-radius-md);
+  padding:14px 12px;
+  text-align:center;
+  position:relative;
+  overflow:hidden;
+  transition:all .2s;
+}
+.metric:hover{border-color:var(--b2);transform:translateY(-1px)}
+.metric::after{
+  content:'';position:absolute;
+  bottom:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,var(--c1),var(--c2));
+  opacity:.4;
+}
+.metric-val{
+  font-size:26px;font-weight:600;
+  line-height:1.1;
+  font-variant-numeric:tabular-nums;
+}
+.metric-lbl{
+  font-size:10px;color:var(--t3);
+  margin-top:4px;
+  letter-spacing:.04em;font-weight:500;
+}
+
+/* ── ALERTS ───────────────────────────────────────────────────────────────── */
+.alert{
+  border-radius:var(--border-radius-md);
+  padding:10px 14px;
+  font-size:12px;
+  border:1px solid;
+  margin-top:8px;
+  line-height:1.6;
+}
+.alert-ok{
+  background:rgba(16,185,129,0.08);
+  color:#34d399;
+  border-color:rgba(16,185,129,0.2);
+}
+.alert-warn{
+  background:rgba(245,158,11,0.08);
+  color:#fbbf24;
+  border-color:rgba(245,158,11,0.2);
+}
+.alert-danger{
+  background:rgba(239,68,68,0.08);
+  color:#f87171;
+  border-color:rgba(239,68,68,0.2);
+}
+.alert-info{
+  background:rgba(14,165,233,0.08);
+  color:#38bdf8;
+  border-color:rgba(14,165,233,0.2);
+}
+.alert-neutral{
+  background:var(--bg3);
+  color:var(--t2);
+  border-color:var(--b);
+}
+
+/* ── BADGES ───────────────────────────────────────────────────────────────── */
+.badge{
+  display:inline-flex;align-items:center;
+  padding:2px 8px;
+  border-radius:20px;
+  font-size:10px;font-weight:600;
+  letter-spacing:.04em;
+}
+.badge-info{background:rgba(14,165,233,0.15);color:#38bdf8;border:1px solid rgba(14,165,233,0.2)}
+.badge-warn{background:rgba(245,158,11,0.15);color:#fbbf24;border:1px solid rgba(245,158,11,0.2)}
+.badge-danger{background:rgba(239,68,68,0.15);color:#f87171;border:1px solid rgba(239,68,68,0.2)}
+.badge-ok{background:rgba(16,185,129,0.15);color:#34d399;border:1px solid rgba(16,185,129,0.2)}
+.badge-neutral{background:var(--bg4);color:var(--t2);border:1px solid var(--b2)}
+
+/* ── PROGRESS BARS ────────────────────────────────────────────────────────── */
+.prog-wrap{margin:6px 0}
+.prog-lbl{display:flex;justify-content:space-between;font-size:11px;color:var(--t2);margin-bottom:4px;font-weight:500}
+.prog-track{
+  height:6px;
+  background:var(--bg4);
+  border-radius:3px;
+  overflow:hidden;
+}
+.prog-fill{
+  height:100%;border-radius:3px;
+  transition:width .5s cubic-bezier(.4,0,.2,1);
+}
+
+/* ── LAYER CARDS ──────────────────────────────────────────────────────────── */
+.layer-card{
+  background:var(--bg2);
+  border:1px solid var(--b);
+  border-radius:var(--border-radius-lg);
+  margin-bottom:10px;overflow:hidden;
+  transition:border-color .2s;
+}
+.layer-card:hover{border-color:var(--b2)}
+.layer-header{
+  padding:12px 16px;
+  background:var(--bg3);
+  border-bottom:1px solid var(--b);
+  display:flex;align-items:center;justify-content:space-between;
+  cursor:pointer;
+  font-weight:500;
+}
+.layer-header:hover{background:var(--bg4)}
+.layer-body{padding:14px 16px;display:none}
+.layer-body.open{display:block}
+
+/* ── ZETA BAR ─────────────────────────────────────────────────────────────── */
+.zeta-bar-wrap{position:relative;margin:10px 0}
+.zeta-track{
+  height:16px;border-radius:8px;
+  background:linear-gradient(90deg,#ef4444,#f59e0b,#10b981,#10b981,#f59e0b,#ef4444);
+  position:relative;
+  box-shadow:0 2px 8px rgba(0,0,0,0.4);
+}
+.zeta-opt{
+  position:absolute;top:0;height:100%;
+  background:rgba(255,255,255,0.15);
+  border-radius:8px;
+  border:1px solid rgba(255,255,255,0.25);
+}
+.zeta-pin{
+  position:absolute;top:-5px;
+  width:4px;height:26px;
+  background:#fff;
+  border-radius:2px;
+  transform:translateX(-50%);
+  transition:left .4s cubic-bezier(.4,0,.2,1);
+  box-shadow:0 0 8px rgba(255,255,255,0.6);
+}
+.zeta-labels{
+  display:flex;justify-content:space-between;
+  font-size:10px;color:var(--t3);margin-top:5px;
+  font-family:var(--font-mono);
+}
+
+/* ── MIXING CANVAS ────────────────────────────────────────────────────────── */
+.mixing-canvas-wrap{
+  position:relative;height:80px;
+  background:var(--bg3);
+  border-radius:var(--border-radius-md);
+  overflow:hidden;margin:8px 0;
+}
+canvas.mixing-canvas{width:100%;height:100%;display:block}
+
+/* ── CHEM GRID ────────────────────────────────────────────────────────────── */
+.chem-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.chem-chip{
+  background:var(--bg2);
+  border:1px solid var(--b);
+  border-radius:var(--border-radius-md);
+  padding:10px 12px;
+  cursor:pointer;
+  transition:all .15s;
+  position:relative;
+  overflow:hidden;
+}
+.chem-chip::before{
+  content:'';position:absolute;
+  top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,var(--c1),var(--c2));
+  opacity:0;transition:opacity .15s;
+}
+.chem-chip:hover{
+  border-color:rgba(14,165,233,0.3);
+  background:var(--bg3);
+  transform:translateY(-1px);
+}
+.chem-chip:hover::before{opacity:1}
+.chem-chip.selected{
+  border-color:var(--c1);
+  background:rgba(14,165,233,0.08);
+}
+.chem-chip.selected::before{opacity:1}
+.chem-chip-name{font-size:12px;font-weight:600;color:var(--t)}
+.chem-chip-type{font-size:10px;color:var(--t3);margin-top:3px}
+.chem-chip-charge{
+  position:absolute;top:8px;right:10px;
+  font-size:10px;font-weight:700;
+}
+
+/* ── REF CARDS ────────────────────────────────────────────────────────────── */
+.ref-card{
+  background:var(--bg2);
+  border:1px solid var(--b);
+  border-radius:var(--border-radius-lg);
+  padding:14px;
+  transition:all .2s;
+}
+.ref-card:hover{
+  border-color:rgba(14,165,233,0.25);
+  transform:translateY(-2px);
+  box-shadow:0 8px 24px rgba(0,0,0,0.3);
+}
+.ref-card-name{font-size:13px;font-weight:600;color:var(--t)}
+.ref-card-sub{font-size:11px;color:var(--t2);margin:4px 0 8px;line-height:1.6}
+.ref-card-mech{
+  font-size:11px;color:var(--t3);
+  font-style:italic;line-height:1.6;
+  padding-top:8px;
+  border-top:1px solid var(--b);
+}
+
+/* ── TABS ─────────────────────────────────────────────────────────────────── */
+.tab-row{
+  display:flex;gap:0;
+  border-bottom:1px solid var(--b);
+  margin-bottom:14px;
+}
+.tab-btn{
+  padding:7px 16px;font-size:12px;font-weight:500;
+  cursor:pointer;
+  color:var(--t2);
+  border-bottom:2px solid transparent;
+  background:none;
+  border-top:none;border-left:none;border-right:none;
+  font-family:var(--font-sans);
+  transition:all .15s;
+  letter-spacing:.02em;
+}
+.tab-btn:hover{color:var(--t)}
+.tab-btn.active{color:var(--c1);border-bottom-color:var(--c1)}
+
+/* ── MISC ─────────────────────────────────────────────────────────────────── */
+.interaction-flash{animation:flash .6s ease}
+@keyframes flash{0%{opacity:.4}100%{opacity:1}}
+
+.mixing-beaker{
+  display:flex;align-items:flex-end;justify-content:center;
+  gap:2px;padding:0 8px;height:60px;
+}
+.bk-layer{
+  border-radius:0 0 4px 4px;
+  transition:height .5s ease, background .5s;
+  min-height:4px;
+}
+
+.separator{height:1px;background:var(--b);margin:6px 0}
+
+/* Result boxes */
+.result-box{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(90px,1fr));
+  gap:10px;margin-top:10px;
+}
+
+/* ── SCROLLBAR ────────────────────────────────────────────────────────────── */
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--bg4);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:var(--t3)}
+
+/* ── ANIMATIONS ───────────────────────────────────────────────────────────── */
+.panel.active > *{
+  animation:fadeSlideUp .25s ease forwards;
+}
+.panel.active > *:nth-child(2){animation-delay:.04s}
+.panel.active > *:nth-child(3){animation-delay:.08s}
+.panel.active > *:nth-child(4){animation-delay:.12s}
+@keyframes fadeSlideUp{
+  from{opacity:0;transform:translateY(8px)}
+  to{opacity:1;transform:translateY(0)}
+}
+
+/* ── COMPAT GRID inline styles override ──────────────────────────────────── */
+#compat-grid .card-sm{
+  border-left-width:3px !important;
+  padding-left:14px;
+}
+
+/* ── CHART CANVAS ─────────────────────────────────────────────────────────── */
+canvas[id$="-chart"]{
+  border-radius:var(--border-radius-md);
+}
+</style>
+</head>
+<body>
+
+<h2 class="sr-only">PaperChem — wet-end chemistry dashboard for paper, board and tissue machines</h2>
+
+<div class="shell">
+<div class="top-bar">
+  <div class="logo">
+    <div class="logo-icon">⚗</div>
+    Paper<span>Chem</span>.js
+    <span class="logo-sub">Wet-End Chemistry Intelligence</span>
+  </div>
+  <div class="live"><div class="live-dot"></div>Live chemistry engine</div>
+</div>
+<div class="main">
+<div class="sidebar">
+  <div class="nav-section">Analysis</div>
+  <div class="nav-item active" onclick="nav('system')">System overview</div>
+  <div class="nav-item" onclick="nav('layers')">Layer chemistry</div>
+  <div class="nav-item" onclick="nav('zeta')">Zeta &amp; charge</div>
+
+  <div class="nav-section">Additives</div>
+  <div class="nav-item" onclick="nav('dye')">Dyes &amp; OBA</div>
+  <div class="nav-item" onclick="nav('sizing')">Sizing agents</div>
+  <div class="nav-item" onclick="nav('strength')">Strength aids</div>
+  <div class="nav-item" onclick="nav('retention')">Retention &amp; drainage</div>
+  <div class="nav-item" onclick="nav('enzymes')">Enzymes &amp; biocides</div>
+  <div class="nav-item" onclick="nav('special')">Specialty chemicals</div>
+
+  <div class="nav-section">Reference</div>
+  <div class="nav-item" onclick="nav('ref')">Chemical library</div>
+  <div class="nav-item" onclick="nav('interactions')">Mix interactions</div>
+</div>
+
+<div class="content" id="content">
+
+<!-- ═══ SYSTEM OVERVIEW ═══ -->
+<div class="panel active" id="p-system">
+  <div class="row">
+    <div class="card" style="flex:1;min-width:200px">
+      <div class="card-title">Machine type</div>
+      <select id="s-machine" onchange="sysChanged()">
+        <option value="fourdrinier">Fourdrinier paper</option>
+        <option value="twin_wire">Twin-wire paper</option>
+        <option value="board" selected>Multilayer board</option>
+        <option value="tissue">Tissue (crescent former)</option>
+        <option value="specialty">Specialty / MG paper</option>
+      </select>
+      <div style="margin-top:10px">
+        <label>Production (t/day)</label>
+        <input type="number" id="s-prod" value="250" min="10" max="3000" onchange="sysChanged()">
+      </div>
+    </div>
+    <div class="card" style="flex:1;min-width:200px">
+      <div class="card-title">Process conditions</div>
+      <div class="fg">
+        <div><label>Headbox pH</label><input type="number" id="s-ph" value="7.2" step="0.1" min="4" max="9" onchange="sysChanged()"></div>
+        <div><label>Temperature (°C)</label><input type="number" id="s-temp" value="52" min="30" max="80" onchange="sysChanged()"></div>
+        <div><label>Freeness CSF (mL)</label><input type="number" id="s-csf" value="420" min="50" max="750" onchange="sysChanged()"></div>
+        <div><label>Consistency (%)</label><input type="number" id="s-cons" value="0.5" step="0.1" min="0.1" max="5" onchange="sysChanged()"></div>
+      </div>
+    </div>
+    <div class="card" style="flex:1;min-width:200px">
+      <div class="card-title">Suspended solids &amp; conductivity</div>
+      <div class="fg">
+        <div><label>Turbidity (NTU)</label><input type="number" id="s-ntu" value="120" onchange="sysChanged()"></div>
+        <div><label>Suspended solids (mg/L)</label><input type="number" id="s-ss" value="280" onchange="sysChanged()"></div>
+        <div><label>Conductivity (µS/cm)</label><input type="number" id="s-cond" value="850" onchange="sysChanged()"></div>
+        <div><label>Cationic demand (meq/L)</label><input type="number" id="s-cd" value="1.8" step="0.1" onchange="sysChanged()"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mixing animation -->
+  <div class="card">
+    <div class="card-title">Wet-end chemistry simulator — mixing visualization</div>
+    <canvas id="mixing-canvas" height="90" style="width:100%;border-radius:var(--border-radius-md);background:var(--bg3)"></canvas>
+    <div id="mixing-msg" class="alert alert-neutral" style="margin-top:8px">Configure furnish and chemicals below, then click Analyze</div>
+  </div>
+
+  <!-- Key results -->
+  <div class="result-box" id="sys-results">
+    <div class="metric"><div class="metric-val" id="r-zeta" style="color:var(--amber)">—</div><div class="metric-lbl">Zeta potential (mV)</div></div>
+    <div class="metric"><div class="metric-val" id="r-bonding" style="color:var(--green)">—</div><div class="metric-lbl">Bonding index / 100</div></div>
+    <div class="metric"><div class="metric-val" id="r-retention" style="color:var(--accent)">—</div><div class="metric-lbl">First-pass retention (%)</div></div>
+    <div class="metric"><div class="metric-val" id="r-drainage" style="color:var(--teal)">—</div><div class="metric-lbl">Drainage rate (rel.)</div></div>
+    <div class="metric"><div class="metric-val" id="r-cad" style="color:var(--purple)">—</div><div class="metric-lbl">Cationic demand met (%)</div></div>
+  </div>
+
+  <div class="row">
+    <div style="flex:1">
+      <button class="btn btn-primary" style="width:100%" onclick="runFullAnalysis()">⚡ Analyze system chemistry</button>
+    </div>
+    <div style="flex:1">
+      <button class="btn" style="width:100%" onclick="nav('layers')">Configure layers →</button>
+    </div>
+  </div>
+
+  <!-- Zeta bar -->
+  <div class="card">
+    <div class="card-title">Zeta potential gauge</div>
+    <div class="zeta-bar-wrap">
+      <div class="zeta-track">
+        <div class="zeta-opt" style="left:46%;width:12%"></div>
+        <div class="zeta-pin" id="zeta-pin" style="left:50%"></div>
+      </div>
+      <div class="zeta-labels"><span>−40 mV</span><span>−20</span><span>0</span><span>+20 mV</span></div>
+    </div>
+    <div id="zeta-stability" style="font-size:12px;color:var(--t2)">—</div>
+    <div id="zeta-rec" class="alert alert-neutral" style="font-size:12px">Run analysis to see zeta recommendation</div>
+  </div>
+
+  <!-- Shopfloor alert -->
+  <div class="card">
+    <div class="card-title">Shopfloor break-risk alert</div>
+    <div id="break-alert" class="alert alert-neutral">Configure system and run analysis</div>
+    <div style="margin-top:8px" id="speed-rec"></div>
+  </div>
+</div>
+
+<!-- ═══ LAYER CHEMISTRY ═══ -->
+<div class="panel" id="p-layers">
+  <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+    <div style="font-size:13px;font-weight:600;color:var(--t)">Layers configure furnish, chemicals and conditions per layer</div>
+    <button class="btn btn-sm btn-primary" onclick="addLayer()">+ Add layer</button>
+  </div>
+  <div id="layers-container"></div>
+  <button class="btn btn-primary" onclick="analyzeAllLayers()">⚡ Analyze all layers</button>
+  <div id="layers-result"></div>
+</div>
+
+<!-- ═══ ZETA & CHARGE ═══ -->
+<div class="panel" id="p-zeta">
+  <div class="row">
+    <div class="card" style="flex:1">
+      <div class="card-title">Furnish blend for zeta</div>
+      <div id="zeta-blend-inputs" style="display:flex;flex-direction:column;gap:6px"></div>
+    </div>
+    <div class="card" style="flex:1">
+      <div class="card-title">Cationic chemicals (kg/t)</div>
+      <div class="fg">
+        <div><label>Cationic starch</label><input type="number" id="z-starch" value="8" min="0" max="20"></div>
+        <div><label>C-PAM</label><input type="number" id="z-cpam" value="0.2" step="0.05" min="0" max="2"></div>
+        <div><label>PAC</label><input type="number" id="z-pac" value="5" min="0" max="30"></div>
+        <div><label>Alum</label><input type="number" id="z-alum" value="0" min="0" max="40"></div>
+        <div><label>PolyDADMAC</label><input type="number" id="z-polydadmac" value="0" min="0" max="5"></div>
+        <div><label>Coagulant ppm</label><input type="number" id="z-coag" value="0" min="0" max="100"></div>
+      </div>
+      <div style="margin-top:10px" class="fg">
+        <div><label>pH</label><input type="number" id="z-ph" value="7.0" step="0.1" min="4" max="9"></div>
+        <div><label>Temp °C</label><input type="number" id="z-temp" value="52" min="30" max="80"></div>
+        <div><label>SS g/L</label><input type="number" id="z-ss" value="0.3" step="0.05" min="0" max="3"></div>
+        <div><label>Cond µS/cm</label><input type="number" id="z-cond" value="800" min="100" max="3000"></div>
+      </div>
+      <button class="btn btn-primary" style="width:100%;margin-top:12px" onclick="calcZeta()">Calculate zeta potential</button>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Zeta potential result</div>
+    <div class="result-box" style="margin-bottom:12px">
+      <div class="metric"><div class="metric-val" id="zr-val" style="color:var(--amber)">—</div><div class="metric-lbl">Zeta (mV)</div></div>
+      <div class="metric"><div class="metric-val" id="zr-ret">—</div><div class="metric-lbl">Retention quality</div></div>
+      <div class="metric"><div class="metric-val" id="zr-cd">—</div><div class="metric-lbl">Cationic demand (meq/g)</div></div>
+    </div>
+    <div class="zeta-bar-wrap">
+      <div class="zeta-track">
+        <div class="zeta-opt" style="left:46%;width:12%"></div>
+        <div class="zeta-pin" id="zeta-pin2" style="left:50%"></div>
+      </div>
+      <div class="zeta-labels"><span>−40 mV</span><span>−20</span><span>0</span><span>+20 mV</span></div>
+    </div>
+    <div id="zr-rec" class="alert alert-neutral" style="font-size:12px">Run calculation above</div>
+  </div>
+  <div class="card">
+    <div class="card-title">pH sweep — zeta vs pH at current conditions</div>
+    <div style="position:relative;height:130px"><canvas id="zeta-chart" role="img" aria-label="Zeta potential vs pH sweep chart">Zeta potential changes across pH 4-9</canvas></div>
+    <div style="font-size:10px;color:var(--t3);text-align:center;margin-top:4px">Green band = optimal retention zone (−10 to +5 mV)</div>
+  </div>
+</div>
+
+<!-- ═══ DYES & OBA ═══ -->
+<div class="panel" id="p-dye">
+  <div class="row">
+    <div class="card" style="flex:1">
+      <div class="card-title">Dye configuration</div>
+      <div style="margin-bottom:10px">
+        <label>Dye type</label>
+        <select id="dye-type" onchange="updateDyeNotes()">
+          <option value="direct">Direct dye (anionic)</option>
+          <option value="basic">Basic / cationic dye</option>
+          <option value="oba">OBA / FWA (optical brightener)</option>
+          <option value="vat">Vat dye</option>
+          <option value="reactive">Reactive dye</option>
+          <option value="sulfur">Sulfur dye</option>
+        </select>
+      </div>
+      <div class="fg">
+        <div><label>Dose (kg/t)</label><input type="number" id="dye-dose" value="1.5" step="0.1" min="0.05" max="15"></div>
+        <div><label>OBA dose (kg/t)</label><input type="number" id="oba-dose" value="2.5" step="0.1" min="0" max="10"></div>
+        <div><label>pH</label><input type="number" id="dye-ph" value="7.0" step="0.1" min="4" max="9"></div>
+        <div><label>Temperature °C</label><input type="number" id="dye-temp" value="52" min="30" max="80"></div>
+      </div>
+      <div class="fg" style="margin-top:10px">
+        <div><label>Alum (kg/t)</label><input type="number" id="dye-alum" value="0" min="0" max="30"></div>
+        <div><label>Cationic fixative (kg/t)</label><input type="number" id="dye-fix" value="0" step="0.5" min="0" max="10"></div>
+        <div><label>Furnish base</label>
+          <select id="dye-furnish">
+            <option value="bhkp">BHKP hardwood</option>
+            <option value="bskp">BSKP softwood</option>
+            <option value="tmp">TMP</option>
+            <option value="occ">Recycled OCC</option>
+            <option value="dip">Deinked pulp</option>
+          </select>
+        </div>
+        <div><label>Cationic starch (kg/t)</label><input type="number" id="dye-starch" value="6" min="0" max="15"></div>
+      </div>
+      <button class="btn btn-primary" style="width:100%;margin-top:12px" onclick="calcDye()">Predict dye behavior</button>
+    </div>
+    <div class="card" style="flex:1;min-width:200px">
+      <div class="card-title">Chemistry notes</div>
+      <div id="dye-notes" style="font-size:12px;color:var(--t2);line-height:1.7;min-height:80px"></div>
+      <div class="separator"></div>
+      <div class="card-title" style="margin-top:10px">Results</div>
+      <div class="result-box" style="grid-template-columns:1fr 1fr">
+        <div class="metric"><div class="metric-val" id="dye-fix-pct" style="color:var(--green)">—</div><div class="metric-lbl">% fixation</div></div>
+        <div class="metric"><div class="metric-val" id="dye-effl" style="color:var(--red)">—</div><div class="metric-lbl">kg/t to effluent</div></div>
+      </div>
+      <div class="prog-wrap" style="margin-top:10px">
+        <div class="prog-lbl"><span>pH efficiency</span><span id="dye-ph-eff">—</span></div>
+        <div class="prog-track"><div class="prog-fill" id="dye-ph-bar" style="width:0;background:var(--accent)"></div></div>
+      </div>
+      <div class="prog-wrap">
+        <div class="prog-lbl"><span>Competition factor</span><span id="dye-comp-eff">—</span></div>
+        <div class="prog-track"><div class="prog-fill" id="dye-comp-bar" style="width:0;background:var(--purple)"></div></div>
+      </div>
+      <div id="dye-rec" class="alert alert-neutral" style="margin-top:8px;font-size:12px">Configure and predict</div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Fixation vs pH (at current conditions)</div>
+    <div style="position:relative;height:120px"><canvas id="dye-chart" role="img" aria-label="Dye fixation efficiency vs pH">Dye fixation vs pH 4-9</canvas></div>
+  </div>
+</div>
+
+<!-- ═══ SIZING ═══ -->
+<div class="panel" id="p-sizing">
+  <div class="row">
+    <div class="card" style="flex:1">
+      <div class="card-title">Internal sizing</div>
+      <div class="fg">
+        <div><label>AKD dose (kg/t)</label><input type="number" id="sz-akd" value="0.5" step="0.1" min="0" max="3"></div>
+        <div><label>ASA dose (kg/t)</label><input type="number" id="sz-asa" value="0" step="0.1" min="0" max="2"></div>
+        <div><label>Rosin (kg/t)</label><input type="number" id="sz-rosin" value="0" step="1" min="0" max="30"></div>
+        <div><label>Alum for sizing (kg/t)</label><input type="number" id="sz-alum" value="0" step="1" min="0" max="40"></div>
+      </div>
+      <div class="fg" style="margin-top:10px">
+        <div><label>pH</label><input type="number" id="sz-ph" value="7.5" step="0.1" min="4" max="9"></div>
+        <div><label>Temp °C</label><input type="number" id="sz-temp" value="55" min="30" max="80"></div>
+        <div><label>Dryer temp °C</label><input type="number" id="sz-dryer" value="90" min="60" max="140"></div>
+        <div><label>Cationic starch (kg/t)</label><input type="number" id="sz-starch" value="8" min="0" max="20"></div>
+      </div>
+      <button class="btn btn-primary" style="width:100%;margin-top:12px" onclick="calcSizing()">Analyze sizing</button>
+    </div>
+    <div class="card" style="flex:1">
+      <div class="card-title">Sizing performance prediction</div>
+      <div id="sizing-notes" style="font-size:12px;color:var(--t2);line-height:1.7;min-height:60px"></div>
+      <div class="result-box" id="sizing-results" style="margin-top:8px">
+        <div class="metric"><div class="metric-val" id="sz-eff" style="color:var(--green)">—</div><div class="metric-lbl">Efficiency %</div></div>
+        <div class="metric"><div class="metric-val" id="sz-cobb" style="color:var(--accent)">—</div><div class="metric-lbl">Est. Cobb (g/m²)</div></div>
+      </div>
+      <div id="sizing-rec" class="alert alert-neutral" style="margin-top:8px;font-size:12px">Configure and analyze</div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">AKD curing efficiency vs temperature &amp; pH</div>
+    <div style="position:relative;height:110px"><canvas id="sizing-chart" role="img" aria-label="AKD curing efficiency chart">AKD curing efficiency</canvas></div>
+  </div>
+</div>
+
+<!-- ═══ STRENGTH AIDS ═══ -->
+<div class="panel" id="p-strength">
+  <div class="card">
+    <div class="card-title">Strength chemical dosing</div>
+    <div class="fg4">
+      <div><label>Cationic starch (kg/t)</label><input type="number" id="st-cstarch" value="8" min="0" max="20"></div>
+      <div><label>Anionic starch (kg/t)</label><input type="number" id="st-astarch" value="0" min="0" max="10"></div>
+      <div><label>CMC (kg/t)</label><input type="number" id="st-cmc" value="0" min="0" max="10"></div>
+      <div><label>Guar gum (kg/t)</label><input type="number" id="st-guar" value="0" min="0" max="5"></div>
+      <div><label>PAE wet strength (kg/t)</label><input type="number" id="st-pae" value="0" min="0" max="25"></div>
+      <div><label>GPAM temp. wet str. (kg/t)</label><input type="number" id="st-gpam" value="0" min="0" max="20"></div>
+      <div><label>Polyamide-WS (kg/t)</label><input type="number" id="st-polyamide" value="0" min="0" max="20"></div>
+      <div><label>Urea-formaldehyde (kg/t)</label><input type="number" id="st-uf" value="0" min="0" max="15"></div>
+      <div><label>C-PAM strength (kg/t)</label><input type="number" id="st-cpam" value="0" step="0.1" min="0" max="3"></div>
+      <div><label>Debonder (tissue, kg/t)</label><input type="number" id="st-debonder" value="0" step="0.1" min="0" max="5"></div>
+    </div>
+    <div class="fg" style="margin-top:10px">
+      <div><label>pH</label><input type="number" id="st-ph" value="7.0" step="0.1" min="4" max="9"></div>
+      <div><label>Temp °C</label><input type="number" id="st-temp" value="52" min="30" max="80"></div>
+      <div><label>CSF freeness (mL)</label><input type="number" id="st-csf" value="420" min="50" max="750"></div>
+      <div><label>Furnish</label>
+        <select id="st-furnish">
+          <option value="bhkp_bskp">BHKP + BSKP blend</option>
+          <option value="occ">Recycled OCC</option>
+          <option value="tissue_mix">Tissue furnish</option>
+          <option value="tmp">TMP / CTMP</option>
+        </select>
+      </div>
+    </div>
+    <button class="btn btn-primary" style="width:100%;margin-top:12px" onclick="calcStrength()">Predict strength &amp; bonding</button>
+  </div>
+  <div class="row">
+    <div class="card" style="flex:1">
+      <div class="card-title">Bonding &amp; break risk</div>
+      <div class="result-box" style="grid-template-columns:1fr 1fr">
+        <div class="metric"><div class="metric-val" id="str-bond" style="color:var(--green)">—</div><div class="metric-lbl">Bonding index</div></div>
+        <div class="metric"><div class="metric-val" id="str-wet" style="color:var(--accent)">—</div><div class="metric-lbl">Wet strength factor</div></div>
+      </div>
+      <div id="str-alert" class="alert alert-neutral" style="margin-top:8px;font-size:12px">—</div>
+    </div>
+    <div class="card" style="flex:1">
+      <div class="card-title">Strength chemical interaction notes</div>
+      <div id="str-notes" style="font-size:12px;color:var(--t2);line-height:1.7">Configure and analyze</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ RETENTION & DRAINAGE ═══ -->
+<div class="panel" id="p-retention">
+  <div class="card">
+    <div class="card-title">Retention &amp; drainage chemical dosing</div>
+    <div class="fg4">
+      <div><label>C-PAM (kg/t)</label><input type="number" id="ret-cpam" value="0.2" step="0.05" min="0" max="2"></div>
+      <div><label>A-PAM (kg/t)</label><input type="number" id="ret-apam" value="0" step="0.05" min="0" max="1"></div>
+      <div><label>Nano silica (kg/t)</label><input type="number" id="ret-sil" value="0.8" step="0.1" min="0" max="4"></div>
+      <div><label>Bentonite (kg/t)</label><input type="number" id="ret-bent" value="0" step="0.5" min="0" max="6"></div>
+      <div><label>PAC (kg/t)</label><input type="number" id="ret-pac" value="5" min="0" max="25"></div>
+      <div><label>Alum (kg/t)</label><input type="number" id="ret-alum" value="0" min="0" max="40"></div>
+      <div><label>PolyDADMAC (kg/t)</label><input type="number" id="ret-polydad" value="0" step="0.2" min="0" max="5"></div>
+      <div><label>Microparticle (kg/t)</label><input type="number" id="ret-micro" value="0" step="0.1" min="0" max="3"></div>
+      <div><label>Cationic starch (kg/t)</label><input type="number" id="ret-cstarch" value="6" min="0" max="15"></div>
+      <div><label>Drainage aid (kg/t)</label><input type="number" id="ret-drain" value="1.0" step="0.2" min="0" max="5"></div>
+    </div>
+    <div class="fg" style="margin-top:10px">
+      <div><label>pH</label><input type="number" id="ret-ph" value="7.0" step="0.1" min="4" max="9"></div>
+      <div><label>Temp °C</label><input type="number" id="ret-temp" value="52" min="30" max="80"></div>
+      <div><label>Fines fraction (%)</label><input type="number" id="ret-fines" value="18" min="5" max="40"></div>
+      <div><label>Filler load (kg/t)</label><input type="number" id="ret-filler" value="150" min="0" max="350"></div>
+    </div>
+    <button class="btn btn-primary" style="width:100%;margin-top:12px" onclick="calcRetention()">Predict retention &amp; drainage</button>
+  </div>
+  <div class="row">
+    <div class="card" style="flex:1">
+      <div class="card-title">Retention results</div>
+      <div class="result-box">
+        <div class="metric"><div class="metric-val" id="ret-fpr" style="color:var(--green)">—</div><div class="metric-lbl">FPR (%)</div></div>
+        <div class="metric"><div class="metric-val" id="ret-dr" style="color:var(--accent)">—</div><div class="metric-lbl">Drainage rate (rel)</div></div>
+      </div>
+      <div id="ret-rec" class="alert alert-neutral" style="margin-top:8px;font-size:12px">Run analysis</div>
+    </div>
+    <div class="card" style="flex:1">
+      <div class="card-title">Retention system classification</div>
+      <div id="ret-class" style="font-size:12px;color:var(--t2);line-height:1.7">Configure and run</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ ENZYMES & BIOCIDES ═══ -->
+<div class="panel" id="p-enzymes">
+  <div class="row">
+    <div class="card" style="flex:1">
+      <div class="card-title">Enzyme pre-treatment</div>
+      <div style="margin-bottom:10px">
+        <label>Enzyme type</label>
+        <select id="enz-type" onchange="updateEnzNotes()">
+          <option value="cellulase">Cellulase (fibrillation)</option>
+          <option value="xylanase">Xylanase (bleaching aid)</option>
+          <option value="amylase">Amylase (starch control)</option>
+          <option value="laccase">Laccase (lignin oxidation)</option>
+          <option value="lipase">Lipase (pitch control)</option>
+          <option value="pectinase">Pectinase (hemp / flax)</option>
+          <option value="protease">Protease (deinking)</option>
+        </select>
+      </div>
+      <div class="fg">
+        <div><label>Dose (g/t pulp)</label><input type="number" id="enz-dose" value="200" min="10" max="2000"></div>
+        <div><label>Contact time (min)</label><input type="number" id="enz-time" value="30" min="5" max="120"></div>
+        <div><label>Temp °C</label><input type="number" id="enz-temp" value="50" min="30" max="70"></div>
+        <div><label>pH</label><input type="number" id="enz-ph" value="6.5" step="0.1" min="4" max="9"></div>
+      </div>
+      <div id="enz-notes" class="alert alert-info" style="margin-top:8px;font-size:12px">Select enzyme type above</div>
+      <button class="btn btn-primary" style="width:100%;margin-top:12px" onclick="calcEnzyme()">Model enzyme effect</button>
+      <div id="enz-result" class="alert alert-neutral" style="margin-top:8px;font-size:12px">Configure and model</div>
+    </div>
+    <div class="card" style="flex:1">
+      <div class="card-title">Biocides &amp; microbiological control</div>
+      <div style="margin-bottom:10px">
+        <label>Biocide type</label>
+        <select id="bio-type" onchange="updateBioNotes()">
+          <option value="isothiazolinone">Isothiazolinone (non-oxidizing)</option>
+          <option value="glutaraldehyde">Glutaraldehyde</option>
+          <option value="quaternary">Quaternary ammonium (DBNPA)</option>
+          <option value="h2o2">Hydrogen peroxide (oxidizing)</option>
+          <option value="clo2">Chlorine dioxide (ClO₂)</option>
+          <option value="bronopol">Bronopol</option>
+          <option value="thione">Methylene bis-thiocyanate</option>
+        </select>
+      </div>
+      <div class="fg">
+        <div><label>Dose (ppm)</label><input type="number" id="bio-dose" value="50" min="5" max="500"></div>
+        <div><label>Frequency</label>
+          <select id="bio-freq">
+            <option value="continuous">Continuous</option>
+            <option value="slug">Slug dosing</option>
+            <option value="daily">Daily</option>
+            <option value="weekly">Weekly</option>
+          </select>
+        </div>
+        <div><label>pH</label><input type="number" id="bio-ph" value="7.0" step="0.1" min="4" max="9"></div>
+        <div><label>Temp °C</label><input type="number" id="bio-temp" value="52" min="30" max="80"></div>
+      </div>
+      <div id="bio-notes" class="alert alert-info" style="margin-top:8px;font-size:12px">Select biocide type</div>
+      <button class="btn btn-primary" style="width:100%;margin-top:12px" onclick="calcBiocide()">Predict efficacy</button>
+      <div id="bio-result" class="alert alert-neutral" style="margin-top:8px;font-size:12px">Configure and predict</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SPECIALTY CHEMICALS ═══ -->
+<div class="panel" id="p-special">
+  <div class="card">
+    <div class="card-title">Specialty &amp; functional chemicals</div>
+    <div class="fg4">
+      <div><label>Defoamer (kg/t)</label><input type="number" id="sp-defoam" value="0.2" step="0.05" min="0" max="2"></div>
+      <div><label>Pitch control / talc (kg/t)</label><input type="number" id="sp-pitch" value="2" step="0.5" min="0" max="10"></div>
+      <div><label>Cationic pitch fixative (kg/t)</label><input type="number" id="sp-fix" value="0" step="0.5" min="0" max="5"></div>
+      <div><label>Dispersant (kg/t)</label><input type="number" id="sp-disp" value="0" step="0.2" min="0" max="5"></div>
+      <div><label>Scale inhibitor (ppm)</label><input type="number" id="sp-scale" value="5" min="0" max="50"></div>
+      <div><label>Corrosion inhibitor (ppm)</label><input type="number" id="sp-corr" value="5" min="0" max="30"></div>
+      <div><label>Felt conditioner (kg/t)</label><input type="number" id="sp-felt" value="0" step="0.1" min="0" max="2"></div>
+      <div><label>Wire cleaner (kg/t)</label><input type="number" id="sp-wire" value="0" step="0.1" min="0" max="2"></div>
+      <div><label>Chelant / EDTA (ppm)</label><input type="number" id="sp-edta" value="0" min="0" max="100"></div>
+      <div><label>Surfactant (kg/t)</label><input type="number" id="sp-surf" value="0" step="0.1" min="0" max="3"></div>
+      <div><label>Flame retardant (kg/t)</label><input type="number" id="sp-fr" value="0" min="0" max="30"></div>
+      <div><label>Barrier coating aid (kg/t)</label><input type="number" id="sp-barrier" value="0" min="0" max="10"></div>
+    </div>
+    <button class="btn btn-primary" style="width:100%;margin-top:12px" onclick="calcSpecialty()">Analyze specialty chemicals</button>
+  </div>
+  <div id="specialty-results" style="display:flex;flex-direction:column;gap:10px"></div>
+</div>
+
+<!-- ═══ CHEMICAL REFERENCE ═══ -->
+<div class="panel" id="p-ref">
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px" id="ref-filters"></div>
+  <div class="chem-grid" id="ref-grid"></div>
+</div>
+
+<!-- ═══ MIX INTERACTIONS ═══ -->
+<div class="panel" id="p-interactions">
+  <div class="card">
+    <div class="card-title">Chemical interaction matrix — select two chemicals to see interaction</div>
+    <div class="fg">
+      <div><label>Chemical A</label>
+        <select id="int-a">
+          <option value="akd">AKD sizing</option>
+          <option value="asa">ASA sizing</option>
+          <option value="rosin">Rosin sizing</option>
+          <option value="alum">Alum</option>
+          <option value="pac">PAC</option>
+          <option value="cpam">C-PAM</option>
+          <option value="apam">A-PAM</option>
+          <option value="cstarch">Cationic starch</option>
+          <option value="pae">PAE wet strength</option>
+          <option value="direct_dye">Direct dye</option>
+          <option value="oba">OBA</option>
+          <option value="gcc">GCC filler</option>
+          <option value="defoamer">Defoamer</option>
+          <option value="cellulase">Cellulase</option>
+          <option value="biocide">Biocide</option>
+        </select>
+      </div>
+      <div><label>Chemical B</label>
+        <select id="int-b">
+          <option value="akd">AKD sizing</option>
+          <option value="asa" selected>ASA sizing</option>
+          <option value="rosin">Rosin sizing</option>
+          <option value="alum">Alum</option>
+          <option value="pac">PAC</option>
+          <option value="cpam">C-PAM</option>
+          <option value="apam">A-PAM</option>
+          <option value="cstarch">Cationic starch</option>
+          <option value="pae">PAE wet strength</option>
+          <option value="direct_dye">Direct dye</option>
+          <option value="oba">OBA</option>
+          <option value="gcc">GCC filler</option>
+          <option value="defoamer">Defoamer</option>
+          <option value="cellulase">Cellulase</option>
+          <option value="biocide">Biocide</option>
+        </select>
+      </div>
+    </div>
+    <div class="fg" style="margin-top:10px">
+      <div><label>pH</label><input type="number" id="int-ph" value="7.0" step="0.1" min="4" max="9"></div>
+      <div><label>Temperature °C</label><input type="number" id="int-temp" value="52" min="30" max="80"></div>
+    </div>
+    <button class="btn btn-primary" style="width:100%;margin-top:12px" onclick="calcInteraction()">Show interaction</button>
+  </div>
+  <div id="interaction-result"></div>
+
+  <div class="card" style="margin-top:4px">
+    <div class="card-title">Common incompatibility quick reference</div>
+    <div id="compat-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px"></div>
+  </div>
+</div>
+
+</div><!-- /content -->
+</div><!-- /main -->
+</div><!-- /shell -->
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+// ── CHART.JS DARK THEME ──────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded',()=>{
+  if(typeof Chart!=='undefined'){
+    Chart.defaults.color='#4e5f7a';
+    Chart.defaults.borderColor='rgba(255,255,255,0.07)';
+    Chart.defaults.font.family="'Space Grotesk',system-ui,sans-serif";
+  }
+});
+
+// ── CORE DATA ────────────────────────────────────────────────────────────────
+const FURNISH = {
+  bskp:{name:'BSKP softwood',zeta:-22,cd:0.8,fines:.08,csf:650,bond:.85},
+  bhkp:{name:'BHKP hardwood',zeta:-20,cd:1.0,fines:.12,csf:550,bond:.70},
+  tmp:{name:'TMP',zeta:-15,cd:2.5,fines:.30,csf:100,bond:.55},
+  ctmp:{name:'CTMP',zeta:-18,cd:2.0,fines:.25,csf:200,bond:.60},
+  occ:{name:'Recycled OCC',zeta:-12,cd:3.5,fines:.20,csf:300,bond:.50},
+  onp:{name:'Recycled ONP',zeta:-10,cd:4.0,fines:.28,csf:250,bond:.40},
+  ukp:{name:'Unbleached kraft',zeta:-24,cd:0.9,fines:.10,csf:600,bond:.80},
+  dip:{name:'Deinked pulp',zeta:-16,cd:3.0,fines:.22,csf:400,bond:.55},
+  hemp:{name:'Hemp / flax bast',zeta:-25,cd:0.7,fines:.06,csf:700,bond:.90},
+  cotton:{name:'Cotton linters',zeta:-23,cd:0.6,fines:.05,csf:680,bond:.92},
+  bamboo:{name:'Bamboo kraft',zeta:-21,cd:1.1,fines:.14,csf:520,bond:.72},
+  sugarcane:{name:'Sugarcane bagasse',zeta:-17,cd:1.8,fines:.22,csf:380,bond:.62},
+};
+
+const CHEMICALS = [
+  {id:'cpam',name:'C-PAM',type:'retention',charge:'cationic',phOpt:[4.5,8.0],dose:[.05,.5,.15],notes:'Polymer bridging retention aid. Most effective near charge neutral point. Loses efficiency in high electrolyte or very alkaline systems.',mech:'Adsorbs onto anionic fines/fibers; bridges to form flocs via polymer bridging mechanism'},
+  {id:'apam',name:'A-PAM',type:'retention',charge:'anionic',phOpt:[5,8.5],dose:[.05,.4,.12],notes:'Used in dual component or microparticle systems. Never use alone — requires cationic partner.',mech:'Anionic flocculent; re-adsorbs on fiber after mechanical shear; forms shear-resistant flocs with cationic PAM'},
+  {id:'nano_silica',name:'Nano silica',type:'retention',charge:'anionic',phOpt:[6.5,9],dose:[.2,2,.8],notes:'Microparticle system component. Works with C-PAM. pH must be >6.5 to remain stable.',mech:'Anionic microparticle (3–5 nm) re-flocculates broken flocs after high-shear zone'},
+  {id:'bentonite',name:'Bentonite',type:'retention',charge:'anionic',phOpt:[5,8.5],dose:[.5,4,1.5],notes:'Clay-based microparticle. Swells extensively in water; high surface area. Adsorbs cationic contaminants.',mech:'Anionic swelling clay; acts as microparticle in three-component retention systems (cationic starch + C-PAM + bentonite)'},
+  {id:'cstarch',name:'Cationic starch',type:'retention_strength',charge:'cationic',phOpt:[5,8],dose:[2,15,6],notes:'Dual-function: retention aid AND dry strength. Requires cooking. Dose controlled by cationic demand. Over-dosing causes over-flocculation.',mech:'Adsorbs strongly on anionic fiber surface via ionic attraction; bridges fines; forms H-bonds in sheet'},
+  {id:'akd',name:'AKD',type:'sizing',charge:'cationic',phOpt:[6.5,8.5],dose:[.2,1.5,.5],notes:'Neutral/alkaline sizing. Requires curing (≥60°C). Slow to develop. pH must be >6.5 — at pH<6.5 AKD is ineffective. Incompatible with high alum doses.',mech:'Ester bond covalently links to cellulose –OH groups during curing at elevated temperature'},
+  {id:'asa',name:'ASA',type:'sizing',charge:'anionic',phOpt:[5.5,8],dose:[.15,1.2,.4],notes:'Faster cure than AKD. Hydrolyzes rapidly — use within 24h of emulsification. More forgiving at lower pH. Requires careful emulsification.',mech:'Anhydride reacts with cellulose –OH groups; forms ester bond faster than AKD; also forms amide bonds'},
+  {id:'rosin',name:'Rosin / alum sizing',type:'sizing',charge:'anionic',phOpt:[4,5.5],dose:[5,25,12],notes:'Acid sizing system (pH 4–5.5). Requires alum as mordant. INCOMPATIBLE with CaCO3 fillers. Low pH causes corrosion and strength loss.',mech:'Alum forms cationic Al-hydroxo complexes that bind anionic rosin to negatively charged fiber surface'},
+  {id:'pae',name:'PAE wet strength',type:'wet_strength',charge:'cationic',phOpt:[5,8],dose:[5,20,10],notes:'Permanent wet strength. Forms covalent crosslinks with cellulose. Not repulpable without special chemicals. Essential for tissue, towel, packaging.',mech:'Azetidinium groups of PAE react covalently with carboxyl groups on cellulose; water-resistant crosslinks'},
+  {id:'gpam',name:'GPAM temp. wet strength',type:'wet_strength',charge:'cationic',phOpt:[5.5,8],dose:[3,15,7],notes:'Temporary wet strength — repulpable. Hemi-acetal crosslinks hydrolyze over time. Ideal for tissue, tissue-towel, recycled grades.',mech:'Glyoxal groups on PAM backbone form hemi-acetal bonds with cellulose; bonds hydrolyze in water over hours'},
+  {id:'cmc',name:'CMC',type:'dry_strength',charge:'anionic',phOpt:[5,8.5],dose:[1,8,3],notes:'Anionic cellulose derivative. Improves tensile, burst. Used with cationic starch in polyelectrolyte complex. Also improves filler retention.',mech:'Forms hydrogen bonds and polyelectrolyte complexes with fibers; improves inter-fiber bonding in press section'},
+  {id:'pac',name:'PAC',type:'coagulant',charge:'cationic',phOpt:[5,8],dose:[2,20,8],notes:'More efficient than alum at higher pH. Broader pH window. Less pH depression. Preferred in neutral/alkaline systems.',mech:'Pre-polymerized Al₁₃ species provides high charge density; neutralizes anionic colloids efficiently at pH 5–8'},
+  {id:'alum',name:'Alum',type:'coagulant',charge:'cationic',phOpt:[4,6.5],dose:[5,40,15],notes:'Classical coagulant. LOWERS pH significantly. Required for rosin sizing. Avoid in alkaline systems — Al(OH)₃ precipitates above pH 7.',mech:'Al³⁺ hydrolyzes to form cationic Al₁₃ species; charge-neutralizes anionic colloids; forms Al(OH)₃ sweep floc'},
+  {id:'polydad',name:'PolyDADMAC',type:'coagulant',charge:'cationic',phOpt:[4,9],dose:[.5,3,1],notes:'High charge density; low MW. Used for charge neutralization and cationic demand measurement (titration standard).',mech:'Strong cationic polyelectrolyte; neutralizes high-CD systems; preferred coagulant in tissue and recycled furnish'},
+  {id:'direct_dye',name:'Direct dye (anionic)',type:'dye',charge:'anionic',phOpt:[5.5,7.5],dose:[.1,5,1],notes:'pH critical for fixation. pH 6–7 optimal for most. High cationic demand furnish competes for fixation sites. Cationic fixative improves exhaustion. Bleeds in wet conditions.',mech:'H-bonding and Van der Waals forces anchor dye to cellulose; ionic repulsion at high pH reduces fixation'},
+  {id:'basic_dye',name:'Basic (cationic) dye',type:'dye',charge:'cationic',phOpt:[4.5,7],dose:[.05,3,.5],notes:'High exhaustion on anionic furnish. Aggressively adsorbs on groundwood/TMP (lignin). INCOMPATIBLE with anionic chemicals — instant precipitation risk.',mech:'Direct ionic attraction to anionic fiber surface; very high first-pass fixation on unbleached fibers'},
+  {id:'oba',name:'OBA / FWA',type:'dye',charge:'anionic',phOpt:[6.5,8.5],dose:[.5,8,2.5],notes:'Requires alkaline pH (>6.5) — severe loss below 6.5. Ca²⁺ competes for adsorption sites. UV light required for fluorescence effect. Cationic starch improves retention.',mech:'Stilbene-based molecule absorbs UV (360 nm), emits blue fluorescence (430–450 nm) — appears whiter than white'},
+  {id:'vat_dye',name:'Vat dye',type:'dye',charge:'nonionic',phOpt:[7,9],dose:[.5,8,2],notes:'Water-insoluble; must be reduced to leuco form. Good light fastness. Mainly used in specialty/decorative papers. Requires alkaline reducing conditions.',mech:'Reduced leuco form adsorbs on cellulose; then reoxidized in air to form final colored insoluble pigment'},
+  {id:'gcc',name:'GCC filler',type:'filler',charge:'anionic',phOpt:[6.5,9],dose:[50,300,150],notes:'INCOMPATIBLE with acid/rosin systems — dissolves below pH 6.5! Improves opacity and brightness. Reduces strength per unit weight.',mech:'Scatters light at fiber–mineral interface; fills inter-fiber spaces to improve smoothness and printability'},
+  {id:'pcc',name:'PCC filler',type:'filler',charge:'anionic',phOpt:[6.5,9],dose:[30,250,120],notes:'Precipitated — higher scattering coefficient than GCC. More pH sensitive. Can be made on-site (PCC satellite).',mech:'Fine particle size gives high scatter coefficient per unit mass; rhombohedral or scalenohedral crystal forms'},
+  {id:'kaolin',name:'Kaolin clay',type:'filler',charge:'anionic',phOpt:[4,9],dose:[50,250,120],notes:'Broad pH range. Good printability (ink holdout). Reduces light scatter vs carbonates. Can be used in acid systems.',mech:'Plate-like particles align in press to improve smoothness; lower scattering than carbonates but broad pH stability'},
+  {id:'talc',name:'Talc',type:'filler_pitch',charge:'hydrophobic',phOpt:[4,9],dose:[20,150,60],notes:'Primary pitch control mineral. Hydrophobic surface adsorbs pitch particles. Also used as functional filler.',mech:'Platelet hydrophobic surfaces irreversibly adsorb wood pitch resin particles; prevents agglomeration on wire/felts'},
+  {id:'defoamer',name:'Defoamer',type:'process_aid',charge:'nonionic',phOpt:[4,9],dose:[.05,1,.2],notes:'Mineral oil or silicone based. OVERDOSE causes hydrophobic sizing spots and reduced retention. Add at low-turbulence points. Incompatible with some biocides.',mech:'Spreads on air bubble lamella; displaces foam-stabilizing surfactants; reduces surface elasticity causing bubble collapse'},
+  {id:'pitch_control',name:'Pitch dispersant',type:'process_aid',charge:'cationic',phOpt:[4.5,8.5],dose:[.5,5,2],notes:'Prevents pitch deposition on wires, felts, press rolls. Usually cationic dispersant or talc combination. Critical in mechanical pulp systems.',mech:'Cationic dispersant passivates hydrophobic pitch surface; talc physically adsorbs resin; prevents sticky deposits'},
+  {id:'scale_inh',name:'Scale inhibitor',type:'process_aid',charge:'anionic',phOpt:[6,9],dose:[2,20,5],notes:'Prevents CaCO3, CaSO4, MgSO4 scale on heat exchangers and wire. Phosphonate or polyacrylate chemistry.',mech:'Threshold inhibition — very small doses prevent crystal nucleation; crystal modification distorts growth habit'},
+  {id:'biocide',name:'Biocide / slimicide',type:'process_aid',charge:'varies',phOpt:[5,8.5],dose:[.1,2,.4],notes:'Rotate between oxidizing (ClO2, H2O2) and non-oxidizing (isothiazolinone, glutaraldehyde) types to prevent resistance. Dose at high-residence-time points.',mech:'Oxidizing types: cell membrane oxidation; non-oxidizing: enzyme inhibition or cell membrane disruption'},
+  {id:'cellulase',name:'Cellulase enzyme',type:'enzyme',charge:'anionic',phOpt:[4.5,7],dose:[.05,2,.5],notes:'Fibrillation (refining aid) or deinking. Endocellulase cuts amorphous cellulose chains; exocellulase from ends. pH 5–6.5 and temp 40–55°C optimal. Inactivated above 70°C.',mech:'Hydrolyzes β-1,4 glycosidic bonds in cellulose; controlled application improves drainage; excess damages fiber strength'},
+  {id:'xylanase',name:'Xylanase enzyme',type:'enzyme',charge:'anionic',phOpt:[5,8],dose:[.05,1,.3],notes:'Bleaching aid — removes xylan covering lignin; reduces chlorine demand by 15–20%. Also used for deinking. pH 6–8, temp 50–60°C.',mech:'Hydrolyzes xylan backbone exposing encapsulated lignin to bleaching chemicals; lowers bleach chemical demand'},
+  {id:'amylase',name:'Amylase enzyme',type:'enzyme',charge:'anionic',phOpt:[5,8],dose:[.02,.5,.1],notes:'Degrades starch deposits in whitewater and felt. Prevents starch accumulation from broke or coated broke. Temp 50–60°C optimal.',mech:'Hydrolysis of α-1,4 and α-1,6 glycosidic bonds in starch to maltose/dextrins; reduces starch cationic demand'},
+  {id:'lipase',name:'Lipase enzyme',type:'enzyme',charge:'nonionic',phOpt:[7,9],dose:[.05,.5,.2],notes:'Pitch control — hydrolyzes triglycerides in wood resin to fatty acids (more water-soluble). Most effective in mechanical pulp. pH 7.5–8.5, temp 40–55°C.',mech:'Catalyzes hydrolysis of ester bonds in triglyceride pitch; fatty acids more hydrophilic and less sticky than triglycerides'},
+  {id:'felt_cond',name:'Felt conditioner',type:'process_aid',charge:'varies',phOpt:[4,9],dose:[.1,.5,.2],notes:'Maintains felt permeability and drainage function. Anionic dispersants clean pitch/fines; cationic types improve conditioning life.',mech:'Disperses pitch, fines and fiber debris from felt structure; maintains dewatering capacity and sheet release'},
+];
+
+const INTERACTIONS = {
+  'akd+asa':  {level:'warning',title:'AKD + ASA competition',msg:'Both compete for the same cellulose ester bonding sites. Use one system — running both wastes chemical and can cause conflicting emulsion stability. If switching systems, fully flush the system first.'},
+  'akd+rosin':{level:'danger',title:'AKD incompatible with rosin/alum system',msg:'AKD requires pH>6.5; rosin/alum requires pH 4–5.5. Cannot run simultaneously. Switching requires full system washout and pH change.'},
+  'rosin+gcc': {level:'danger',title:'Rosin sizing + GCC filler — INCOMPATIBLE',msg:'GCC dissolves below pH 6.5. Rosin/alum system operates at pH 4–5.5. CaCO3 dissolves, releasing CO2 and destroying the wet end. Use kaolin filler with acid sizing.'},
+  'alum+gcc':  {level:'danger',title:'Alum + GCC — potentially incompatible',msg:'High alum doses lower pH below GCC stability threshold (pH 6.5). At pH<6.5, GCC dissolves releasing CO2 and Ca²⁺. Monitor pH carefully — limit alum dose.'},
+  'direct_dye+basic_dye':{level:'danger',title:'Anionic + cationic dye — immediate precipitation',msg:'Direct dye (anionic) + basic dye (cationic) precipitate instantly when mixed in solution. Never dose together. If both shades needed, use only one dye type; for two-color, add at separate points with sufficient distance.'},
+  'oba+alum':  {level:'warning',title:'OBA + alum — fixation loss',msg:'Alum lowers pH below OBA optimal (6.5–8.5). Each 1 pH unit drop below 6.5 reduces OBA efficiency by ~30%. At pH<5.5, OBA is essentially inactive. Minimize alum if OBA brightness is critical.'},
+  'akd+alum':  {level:'warning',title:'AKD + alum — pH conflict',msg:'Alum lowers pH. AKD requires pH>6.5. High alum dose (>10 kg/t) can push pH below 6.5, making AKD ineffective. Use PAC instead of alum for coagulation in AKD systems.'},
+  'pae+cellulase':{level:'warning',title:'PAE + cellulase — do not dose simultaneously',msg:'Cellulase can hydrolyze the cellulose surface that PAE crosslinks are anchored to. Apply cellulase treatment before PAE dosing point, with sufficient drainage/wash between.'},
+  'cpam+apam': {level:'ok',title:'C-PAM + A-PAM — dual polymer retention system',msg:'Classic two-component retention system. C-PAM added first (before fan pump) adsorbs on fiber; A-PAM added second (at headbox) reflocculates after shear. Keep doses balanced: typical ratio 1:0.6–1:1 (C:A).'},
+  'cstarch+cpam':{level:'ok',title:'Cationic starch + C-PAM — excellent synergy',msg:'Cationic starch acts as "fix" for fines; C-PAM bridges flocs. Together they form a robust retention system. Starch also contributes dry strength. Typical: 6–8 kg/t starch + 0.15–0.25 kg/t C-PAM.'},
+  'gcc+cstarch':{level:'ok',title:'GCC + cationic starch — improved retention',msg:'GCC filler is weakly anionic. Cationic starch adsorbs on fiber and acts as a bridge for GCC particles. Pre-treating GCC with cationic polymer before addition increases filler retention by 10–20%.'},
+  'defoamer+oba':{level:'warning',title:'Silicone defoamer + OBA — potential brightness loss',msg:'Silicone-based defoamers can deposit on fiber and interfere with OBA adsorption, reducing brightness by 2–5 ISO points. Use mineral-oil defoamers or add defoamer upstream and OBA downstream.'},
+  'biocide+cellulase':{level:'danger',title:'Biocide + cellulase — enzyme inactivation',msg:'Oxidizing biocides (H2O2, ClO2) and some non-oxidizing biocides denature cellulase enzymes. Add enzyme in clean system zone, well upstream of biocide dosing point. Do not recirculate biocide-containing whitewater through enzyme zone.'},
+};
+
+// ── CHARTS STATE ────────────────────────────────────────────────────────────
+let zetaChart=null, dyeChart=null, sizingChart=null;
+
+// ── NAVIGATION ─────────────────────────────────────────────────────────────
+function nav(id){
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  const ni=document.querySelector(`.nav-item[onclick="nav('${id}')"]`);
+  if(ni) ni.classList.add('active');
+  const panel=document.getElementById(`p-${id}`);
+  if(panel) panel.classList.add('active');
+  if(id==='zeta') initZetaBlendInputs();
+  if(id==='ref') buildRefGrid();
+  if(id==='interactions') buildCompatGrid();
+  if(id==='layers' && document.getElementById('layers-container').children.length===0) initDefaultLayers();
+  if(id==='enzymes'){updateEnzNotes();updateBioNotes();}
+  if(id==='dye') updateDyeNotes();
+}
+
+// ── MIXING CANVAS ANIMATION ──────────────────────────────────────────────────
+let mixCtx, mixParticles=[], mixAnimId=null;
+function initMixCanvas(){
+  const cv=document.getElementById('mixing-canvas');
+  if(!cv)return;
+  cv.width=cv.offsetWidth*2||800; cv.height=180;
+  mixCtx=cv.getContext('2d');
+  mixParticles=[];
+  for(let i=0;i<60;i++) mixParticles.push({
+    x:Math.random()*cv.width, y:Math.random()*cv.height,
+    vx:(Math.random()-.5)*1.2, vy:(Math.random()-.5)*1.2,
+    r:Math.random()*3+1.5, hue:Math.random()*60+160, alpha:.6
+  });
+  animMix();
+}
+function animMix(){
+  const cv=document.getElementById('mixing-canvas');
+  if(!cv||!mixCtx)return;
+  mixCtx.clearRect(0,0,cv.width,cv.height);
+  mixCtx.fillStyle='rgba(20,30,50,.12)';
+  mixCtx.fillRect(0,0,cv.width,cv.height);
+  mixParticles.forEach(p=>{
+    p.x+=p.vx; p.y+=p.vy;
+    if(p.x<0||p.x>cv.width) p.vx*=-1;
+    if(p.y<0||p.y>cv.height) p.vy*=-1;
+    mixCtx.beginPath();
+    mixCtx.arc(p.x,p.y,p.r,0,Math.PI*2);
+    mixCtx.fillStyle=`hsla(${p.hue},70%,60%,${p.alpha})`;
+    mixCtx.fill();
+  });
+  mixAnimId=requestAnimationFrame(animMix);
+}
+
+// ── CORE CHEMISTRY FUNCTIONS ─────────────────────────────────────────────────
+function calcZetaVal(blend, ph, temp, chemDoses={}, ss=0, cond=500){
+  let base=0, cd=0, fines=0;
+  blend.forEach(({id,frac})=>{const f=FURNISH[id];if(!f)return;base+=f.zeta*frac;cd+=f.cd*frac;fines+=f.fines*frac;});
+  base+=(7-ph)*2+(temp-50)*.08-ss*.0005+(cond-500)*.002;
+  let shift=0;
+  Object.entries(chemDoses).forEach(([k,d])=>{
+    if(k==='cpam'||k==='cstarch') shift+=d*.7;
+    else if(k==='pac') shift+=d*.28;
+    else if(k==='alum') shift+=d*.25;
+    else if(k==='polydad'||k==='polydadmac') shift+=d*.5;
+    else if(k==='apam'||k==='nano_silica'||k==='bentonite') shift-=d*.2;
+  });
+  return {zeta:Math.round((base+shift)*10)/10, cd:Math.round(cd*100)/100, fines:Math.round(fines*100)/100};
+}
+
+function calcBondingVal(blend, ph, temp, chemDoses={}, csf=450){
+  let bp=0;
+  blend.forEach(({id,frac})=>{const f=FURNISH[id];if(f)bp+=f.bond*frac;});
+  let bi=bp*100;
+  if(ph<5)bi*=.75; else if(ph<6)bi*=.88; else if(ph<7.5)bi*=1; else if(ph<8.5)bi*=.95; else bi*=.85;
+  if(temp>70)bi*=.90; else if(temp>60)bi*=.95;
+  bi+=Math.max(0,(600-csf)/600)*20;
+  // Chemical strength contributions
+  const contrib={cstarch:.4,pae:.6,gpam:.45,cmc:.35,cpam:.2,apam:.1};
+  Object.entries(chemDoses).forEach(([k,d])=>{if(contrib[k])bi+=contrib[k]*d;});
+  let blFines=0;
+  blend.forEach(({id,frac})=>{const f=FURNISH[id];if(f)blFines+=f.fines*frac;});
+  bi+=blFines*40;
+  return Math.max(0,Math.min(100,bi));
+}
+
+function breakRisk(bi){
+  if(bi<30)return{risk:'CRITICAL',cls:'alert-danger',msg:`CRITICAL — bonding index ${bi.toFixed(1)}: Very high web break risk. Check furnish, pH, and strength chemical dosing immediately.`};
+  if(bi<45)return{risk:'HIGH',cls:'alert-danger',msg:`HIGH BREAK RISK — bonding index ${bi.toFixed(1)}: Reduce machine speed or increase strength chemical dose urgently.`};
+  if(bi<55)return{risk:'MODERATE',cls:'alert-warn',msg:`MODERATE RISK — bonding index ${bi.toFixed(1)}: Monitor carefully. Consider more refining or strength aid.`};
+  if(bi<65)return{risk:'LOW-MOD',cls:'alert-warn',msg:`ACCEPTABLE — bonding index ${bi.toFixed(1)}: Stable but approaching lower limit.`};
+  if(bi<75)return{risk:'LOW',cls:'alert-ok',msg:`GOOD — bonding index ${bi.toFixed(1)}: Acceptable bonding. Normal operation.`};
+  return{risk:'MINIMAL',cls:'alert-ok',msg:`EXCELLENT — bonding index ${bi.toFixed(1)}: High fiber bonding. Stable runability expected.`};
+}
+
+function zetaClass(z){
+  if(z<-25)return{cls:'badge-danger',label:'Highly anionic',ret:'POOR',rec:'Add significant cationic chemicals or check for anionic trash from broke/fillers.'};
+  if(z<-15)return{cls:'badge-warn',label:'Anionic',ret:'BELOW OPTIMAL',rec:'Increase cationic polymer or coagulant dose to approach charge-neutral point (−5 to +5 mV).'};
+  if(z<-5)return{cls:'badge-warn',label:'Mildly anionic',ret:'MODERATE',rec:'Fine-tune C-PAM or PAC dose — approaching optimal zone.'};
+  if(z<=5)return{cls:'badge-ok',label:'Near neutral',ret:'EXCELLENT',rec:'System near charge-neutral. Optimal retention and drainage expected.'};
+  if(z<=15)return{cls:'badge-warn',label:'Mildly cationic',ret:'OVER-DOSED',rec:'Reduce cationic chemical dose — over-flocculation may reduce formation quality.'};
+  return{cls:'badge-danger',label:'Strongly cationic',ret:'POOR',rec:'System overdosed with cationic chemicals. Pitch/foam risk high. Reduce doses significantly.'};
+}
+
+function updateZetaPin(id, zval){
+  const pct=Math.max(2,Math.min(98,((zval+40)/60)*100));
+  const pin=document.getElementById(id);
+  if(pin) pin.style.left=pct+'%';
+}
+
+// ── SYSTEM OVERVIEW ──────────────────────────────────────────────────────────
+function sysChanged(){} // trigger on input change — placeholder
+
+function runFullAnalysis(){
+  const ph=parseFloat(document.getElementById('s-ph').value);
+  const temp=parseFloat(document.getElementById('s-temp').value);
+  const csf=parseFloat(document.getElementById('s-csf').value);
+  const ss=parseFloat(document.getElementById('s-ss').value)/1000;
+  const cond=parseFloat(document.getElementById('s-cond').value);
+  const cd=parseFloat(document.getElementById('s-cd').value);
+  const machine=document.getElementById('s-machine').value;
+
+  const blend=[{id:'bhkp',frac:.5},{id:'bskp',frac:.3},{id:'occ',frac:.2}];
+  const chemDoses={cstarch:8,cpam:.2,pac:5,nano_silica:.8};
+
+  const {zeta,cd:blendCd}=calcZetaVal(blend,ph,temp,chemDoses,ss,cond);
+  const bi=calcBondingVal(blend,ph,temp,chemDoses,csf);
+  const ret=Math.min(98,60+Math.max(0,(5-Math.abs(zeta+3)))*3+(csf<500?10:0));
+  const drainage=Math.round(70+Math.max(0,(600-csf)/6));
+  const cadMet=Math.min(100,Math.round((chemDoses.cstarch*.4+chemDoses.cpam*5+chemDoses.pac*2.5)/cd/0.25));
+
+  setText('r-zeta',(zeta>0?'+':'')+zeta);
+  setText('r-bonding',bi.toFixed(1));
+  setText('r-retention',ret.toFixed(1)+'%');
+  setText('r-drainage',drainage+'%');
+  setText('r-cad',cadMet+'%');
+
+  document.getElementById('r-zeta').style.color = zeta>5?'#A32D2D':zeta>-10?'#3B6D11':'#BA7517';
+  document.getElementById('r-bonding').style.color = bi>70?'#3B6D11':bi>50?'#BA7517':'#A32D2D';
+
+  updateZetaPin('zeta-pin',zeta);
+  const zc=zetaClass(zeta);
+  setText('zeta-stability',`Zeta: ${zeta} mV — ${zc.label} | Retention: ${zc.ret}`);
+  setAlert('zeta-rec',zc.rec, zeta>=-10&&zeta<=5?'alert-ok':Math.abs(zeta)>20?'alert-danger':'alert-warn');
+
+  const br=breakRisk(bi);
+  setAlert('break-alert',br.msg,br.cls);
+  const speed=bi<30?250:bi<45?400:bi<55?550:bi<65?700:bi<75?800:1000;
+  setText('speed-rec',`Recommended max speed: ${speed} m/min`);
+
+  // Mixing animation particles reflect chemistry
+  if(zeta>-5&&zeta<10){
+    mixParticles.forEach(p=>{p.hue=100+Math.random()*40;p.alpha=.8;});
+  } else if(zeta<-20){
+    mixParticles.forEach(p=>{p.hue=210+Math.random()*30;p.alpha=.5;});
+  } else {
+    mixParticles.forEach(p=>{p.hue=30+Math.random()*30;p.alpha=.65;});
+  }
+  setAlert('mixing-msg',`pH ${ph} | Zeta ${zeta} mV | Bonding ${bi.toFixed(1)} | FPR ${ret.toFixed(1)}% | ${zc.label} system`,
+    zeta>=-10&&zeta<=5?'alert-ok':Math.abs(zeta)>20?'alert-danger':'alert-warn');
+}
+
+// ── LAYERS ───────────────────────────────────────────────────────────────────
+let layerCount=0;
+const furnishOpts=Object.entries(FURNISH).map(([k,v])=>`<option value="${k}">${v.name}</option>`).join('');
+const chemLayerList=[
+  ['cstarch','Cat. starch (kg/t)',8],['cpam','C-PAM (kg/t)',.2],['pac','PAC (kg/t)',5],
+  ['akd','AKD (kg/t)',.5],['asa','ASA (kg/t)',0],['pae','PAE wet str. (kg/t)',0],
+  ['gpam','GPAM (kg/t)',0],['cmc','CMC (kg/t)',0],['direct_dye','Direct dye (kg/t)',0],
+  ['oba','OBA (kg/t)',0],['alum','Alum (kg/t)',0],['defoamer','Defoamer (kg/t)',.2],
+  ['biocide','Biocide (ppm)',0],['nano_silica','Nano silica (kg/t)',.8],
+];
+function addLayer(def={}){
+  layerCount++;
+  const id=`layer-${layerCount}`;
+  const div=document.createElement('div');
+  div.className='layer-card'; div.id=id;
+  div.innerHTML=`
+  <div class="layer-header" onclick="toggleLayer('${id}')">
+    <div>
+      <input type="text" value="${def.name||'Layer '+layerCount}" style="background:none;border:none;color:var(--t);font-weight:500;font-size:13px;width:200px;outline:none" onclick="event.stopPropagation()">
+      <span id="${id}-badge" class="badge badge-neutral" style="margin-left:8px">—</span>
+    </div>
+    <div style="display:flex;gap:6px;align-items:center">
+      <span id="${id}-zeta-badge" style="font-size:11px;color:var(--t3)">ζ —</span>
+      <button class="btn btn-sm btn-danger" onclick="event.stopPropagation();document.getElementById('${id}').remove()">Remove</button>
+    </div>
+  </div>
+  <div class="layer-body open" id="${id}-body">
+    <div class="fg4" style="margin-bottom:10px">
+      <div><label>Furnish 1</label><select id="${id}-f1">${furnishOpts}</select></div>
+      <div><label>Fraction 1 (%)</label><input type="number" id="${id}-fr1" value="${def.fr1||50}" min="1" max="99"></div>
+      <div><label>Furnish 2</label><select id="${id}-f2">${furnishOpts}</select></div>
+      <div><label>Fraction 2 (%)</label><input type="number" id="${id}-fr2" value="${def.fr2||30}" min="0" max="99"></div>
+      <div><label>Furnish 3</label><select id="${id}-f3"><option value="">— none —</option>${furnishOpts}</select></div>
+      <div><label>Fraction 3 (%)</label><input type="number" id="${id}-fr3" value="${def.fr3||20}" min="0" max="99"></div>
+      <div><label>Furnish 4</label><select id="${id}-f4"><option value="">— none —</option>${furnishOpts}</select></div>
+      <div><label>Fraction 4 (%)</label><input type="number" id="${id}-fr4" value="${def.fr4||0}" min="0" max="99"></div>
+    </div>
+    <div class="fg4" style="margin-bottom:10px">
+      <div><label>pH</label><input type="number" id="${id}-ph" value="${def.ph||7.0}" step="0.1" min="4" max="9"></div>
+      <div><label>Temp °C</label><input type="number" id="${id}-temp" value="${def.temp||52}" min="30" max="80"></div>
+      <div><label>CSF (mL)</label><input type="number" id="${id}-csf" value="${def.csf||420}" min="50" max="750"></div>
+      <div><label>Grammage (gsm)</label><input type="number" id="${id}-gsm" value="${def.gsm||100}" min="10" max="500"></div>
+      <div><label>SS (mg/L)</label><input type="number" id="${id}-ss" value="${def.ss||250}" min="0" max="2000"></div>
+      <div><label>Conductivity (µS/cm)</label><input type="number" id="${id}-cond" value="${def.cond||800}" min="100" max="3000"></div>
+      <div><label>Dye (kg/t)</label><input type="number" id="${id}-dye" value="${def.dye||0}" step="0.1" min="0" max="10"></div>
+      <div><label>OBA (kg/t)</label><input type="number" id="${id}-oba" value="${def.oba||0}" step="0.1" min="0" max="8"></div>
+    </div>
+    <div class="card-title">Chemical dosing (kg/t unless stated)</div>
+    <div class="fg4">
+      ${chemLayerList.map(([k,lbl,dv])=>`<div><label>${lbl}</label><input type="number" id="${id}-${k}" value="${def[k]!==undefined?def[k]:dv}" step="${k==='cpam'?.05:1}" min="0"></div>`).join('')}
+    </div>
+    <div id="${id}-result" style="margin-top:8px"></div>
+  </div>`;
+
+  // Set default furnish selectors
+  const selVals=[['f1','bhkp'],['f2','bskp'],['f3','occ'],['f4','']];
+  div.querySelectorAll('select[id$="-f1"]').forEach(s=>s.value=def.f1||'bhkp');
+  document.getElementById('layers-container').appendChild(div);
+  setTimeout(()=>{
+    const el=document.getElementById(`${id}-f1`);if(el)el.value=def.f1||'bhkp';
+    const el2=document.getElementById(`${id}-f2`);if(el2)el2.value=def.f2||'bskp';
+    const el3=document.getElementById(`${id}-f3`);if(el3)el3.value=def.f3||'occ';
+  },0);
+}
+
+function toggleLayer(id){
+  const body=document.getElementById(`${id}-body`);
+  if(body) body.classList.toggle('open');
+}
+
+function initDefaultLayers(){
+  const defaults=[
+    {name:'Top layer (white top)',f1:'bhkp',fr1:50,f2:'bskp',fr2:40,f3:'dip',fr3:10,ph:7.5,temp:50,csf:450,gsm:80,cstarch:8,cpam:.2,akd:.5,oba:2},
+    {name:'Middle layer (body ply)',f1:'ctmp',fr1:50,f2:'occ',fr2:30,f3:'bhkp',fr3:20,ph:6.5,temp:55,csf:250,gsm:200,cstarch:12,cpam:.3},
+    {name:'Back layer (liner)',f1:'occ',fr1:60,f2:'bskp',fr2:30,f3:'ukp',fr3:10,ph:6.8,temp:55,csf:350,gsm:120,cstarch:10,cpam:.2,pae:8},
+  ];
+  defaults.forEach(d=>addLayer(d));
+}
+
+function analyzeAllLayers(){
+  const layerEls=document.querySelectorAll('#layers-container .layer-card');
+  let html='<div style="display:flex;flex-direction:column;gap:8px;margin-top:4px">';
+  let minBi=100; let worstName='';
+
+  layerEls.forEach(el=>{
+    const id=el.id;
+    const name=el.querySelector('input[type="text"]').value;
+    const ph=parseFloat(get(id+'-ph').value||7);
+    const temp=parseFloat(get(id+'-temp').value||52);
+    const csf=parseFloat(get(id+'-csf').value||420);
+    const gsm=parseFloat(get(id+'-gsm').value||100);
+    const ss=parseFloat(get(id+'-ss').value||250)/1000;
+    const cond=parseFloat(get(id+'-cond').value||800);
+
+    const blend=[];
+    [['f1','fr1'],['f2','fr2'],['f3','fr3'],['f4','fr4']].forEach(([fk,frk])=>{
+      const fid=get(id+'-'+fk)?.value;
+      const fr=parseFloat(get(id+'-'+frk)?.value||0)/100;
+      if(fid&&fr>0&&FURNISH[fid])blend.push({id:fid,frac:fr});
+    });
+    if(!blend.length) blend.push({id:'bhkp',frac:1});
+    const totFrac=blend.reduce((s,b)=>s+b.frac,0);
+    if(totFrac>0) blend.forEach(b=>b.frac/=totFrac);
+
+    const chemDoses={};
+    chemLayerList.forEach(([k])=>{const v=parseFloat(get(id+'-'+k)?.value||0);if(v>0)chemDoses[k]=v;});
+    const dye=parseFloat(get(id+'-dye')?.value||0);
+    const oba=parseFloat(get(id+'-oba')?.value||0);
+
+    const {zeta}=calcZetaVal(blend,ph,temp,chemDoses,ss,cond);
+    const bi=calcBondingVal(blend,ph,temp,chemDoses,csf);
+    const br=breakRisk(bi);
+    const zc=zetaClass(zeta);
+
+    // Update layer header badges
+    const badge=document.getElementById(id+'-badge');
+    if(badge){badge.className='badge '+(bi<55?'badge-warn':bi<65?'badge-warn':'badge-ok');badge.textContent=br.risk;}
+    const zetaBadge=document.getElementById(id+'-zeta-badge');
+    if(zetaBadge){zetaBadge.textContent=`ζ ${zeta} mV`;}
+
+    if(bi<minBi){minBi=bi;worstName=name;}
+
+    // Zeta bar in layer result
+    const zPct=Math.max(2,Math.min(98,((zeta+40)/60)*100));
+    let dyeWarning='';
+    if(dye>0&&ph>7.5) dyeWarning=`<div style="font-size:11px;color:var(--twarn);margin-top:4px">Direct dye: pH ${ph} above optimal — check fixation</div>`;
+    if(oba>0&&ph<6.5) dyeWarning+=`<div style="font-size:11px;color:var(--tdanger);margin-top:2px">OBA: pH ${ph} below minimum (6.5) — OBA inactive!</div>`;
+    if(oba>0&&ph>=6.5) dyeWarning+=`<div style="font-size:11px;color:var(--tsuccess);margin-top:2px">OBA: pH ${ph} in range — efficiency ${Math.round(Math.min(100,(ph-6.5)*50+60))}%</div>`;
+
+    const r=document.getElementById(id+'-result');
+    if(r) r.innerHTML=`<div class="alert ${br.cls}" style="font-size:11px">${br.msg}${dyeWarning}</div>`;
+
+    html+=`
+    <div class="card" style="border-left:3px solid ${bi>70?'var(--tsuccess)':bi>50?'var(--twarn)':'var(--tdanger)'}">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <div style="font-weight:500">${name}</div>
+        <div style="display:flex;gap:6px">
+          <span class="badge ${bi>70?'badge-ok':bi>50?'badge-warn':'badge-danger'}">Bond: ${bi.toFixed(1)}</span>
+          <span class="badge badge-info">ζ ${zeta} mV</span>
+          <span class="badge badge-neutral">${gsm} gsm</span>
+        </div>
+      </div>
+      <div class="zeta-bar-wrap">
+        <div class="zeta-track" style="height:8px;border-radius:4px">
+          <div class="zeta-opt" style="left:46%;width:12%;height:100%"></div>
+          <div class="zeta-pin" style="left:${zPct}%;width:2px;height:16px;top:-4px"></div>
+        </div>
+      </div>
+      <div style="font-size:11px;color:var(--t2);margin-top:4px">${zc.rec}${dyeWarning}</div>
+    </div>`;
+  });
+  html+=`<div class="alert ${minBi<55?'alert-danger':minBi<65?'alert-warn':'alert-ok'}" style="font-size:12px">
+    System weakest layer: <strong>${worstName}</strong> (bonding ${minBi.toFixed(1)}). ${breakRisk(minBi).msg}
+  </div></div>`;
+  document.getElementById('layers-result').innerHTML=html;
+}
+
+// ── ZETA ─────────────────────────────────────────────────────────────────────
+function initZetaBlendInputs(){
+  const c=document.getElementById('zeta-blend-inputs');
+  if(c.children.length)return;
+  [['bhkp',50],['bskp',30],['occ',20]].forEach(([fid,pct])=>{
+    const row=document.createElement('div');
+    row.className='fg'; row.style.marginBottom='6px';
+    row.innerHTML=`<select class="z-fsel">${furnishOpts}</select><input type="number" class="z-ffrac" value="${pct}" min="0" max="100" style="max-width:70px">`;
+    c.appendChild(row);
+    row.querySelector('.z-fsel').value=fid;
+  });
+  const addBtn=document.createElement('button');
+  addBtn.className='btn btn-sm'; addBtn.textContent='+ Furnish';
+  addBtn.onclick=()=>{
+    const row=document.createElement('div');
+    row.className='fg'; row.style.marginBottom='6px';
+    row.innerHTML=`<select class="z-fsel">${furnishOpts}</select><input type="number" class="z-ffrac" value="0" min="0" max="100" style="max-width:70px">`;
+    c.insertBefore(row,addBtn);
+  };
+  c.appendChild(addBtn);
+}
+
+function getZetaBlend(){
+  const blend=[];
+  document.querySelectorAll('#zeta-blend-inputs .z-fsel').forEach((sel,i)=>{
+    const frac=parseFloat(document.querySelectorAll('#zeta-blend-inputs .z-ffrac')[i]?.value||0)/100;
+    if(frac>0&&FURNISH[sel.value]) blend.push({id:sel.value,frac});
+  });
+  if(!blend.length)blend.push({id:'bhkp',frac:1});
+  const tot=blend.reduce((s,b)=>s+b.frac,0);
+  blend.forEach(b=>b.frac/=tot);
+  return blend;
+}
+
+function calcZeta(){
+  const blend=getZetaBlend();
+  const ph=parseFloat(get('z-ph').value);
+  const temp=parseFloat(get('z-temp').value);
+  const ss=parseFloat(get('z-ss').value);
+  const cond=parseFloat(get('z-cond').value);
+  const chemDoses={
+    cstarch:parseFloat(get('z-starch').value)||0,
+    cpam:parseFloat(get('z-cpam').value)||0,
+    pac:parseFloat(get('z-pac').value)||0,
+    alum:parseFloat(get('z-alum').value)||0,
+    polydad:parseFloat(get('z-polydadmac').value)||0,
+  };
+  const {zeta,cd}=calcZetaVal(blend,ph,temp,chemDoses,ss,cond);
+  const zc=zetaClass(zeta);
+  const retEst=Math.min(95,65+Math.max(0,(5-Math.abs(zeta+3)))*4);
+
+  setText('zr-val',(zeta>0?'+':'')+zeta);
+  document.getElementById('zr-val').style.color=zeta>5?'#A32D2D':zeta>=-10?'#3B6D11':'#BA7517';
+  setText('zr-ret',zc.ret);
+  setText('zr-cd',cd.toFixed(2));
+  updateZetaPin('zeta-pin2',zeta);
+  setAlert('zr-rec',zc.rec, zeta>=-10&&zeta<=5?'alert-ok':Math.abs(zeta)>20?'alert-danger':'alert-warn');
+
+  drawZetaChart(blend,temp,chemDoses,ss,cond,ph);
+}
+
+function drawZetaChart(blend,temp,chemDoses,ss,cond,curPH){
+  const cv=document.getElementById('zeta-chart');
+  if(!cv)return;
+  const phs=[],zetas=[];
+  for(let p=4;p<=9;p+=.2){phs.push(p.toFixed(1));zetas.push(calcZetaVal(blend,p,temp,chemDoses,ss,cond).zeta);}
+  const curIdx=Math.round((curPH-4)/.2);
+  if(zetaChart){zetaChart.destroy();}
+  zetaChart=new Chart(cv,{type:'line',data:{labels:phs,datasets:[
+    {label:'Zeta (mV)',data:zetas,borderColor:'#378ADD',borderWidth:1.5,pointRadius:0,fill:false,tension:.4},
+    {label:'Current pH',data:phs.map((_,i)=>i===curIdx?zetas[i]:null),borderColor:'#BA7517',pointRadius:phs.map((_,i)=>i===curIdx?5:0),borderWidth:0,fill:false},
+  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{maxTicksLimit:6}},y:{grid:{color:'rgba(128,128,128,.1)'},ticks:{callback:v=>v+'mV'}}}}});
+}
+
+// ── DYE ───────────────────────────────────────────────────────────────────────
+const DYE_NOTES={
+  direct:'Anionic dye — fixation peaks at pH 6–7. High cationic demand furnish competes for fixation sites. Add cationic fixative 0.5–2 kg/t upstream of dye. Avoid high alum (lowers pH). Bleeds in wet reel/rewinder.',
+  basic:'Cationic dye — ionic attraction to anionic fiber surface gives very high exhaustion (90%+) in acidic pH. NEVER combine with anionic dyes — immediate precipitation. Shade dramatically shifts above pH 7. Aggressive on mechanical pulp (lignin adsorption).',
+  oba:'OBA requires alkaline pH >6.5 — efficiency drops sharply below 6.5, negligible at pH<5.5. Ca²⁺ in water competes for adsorption sites (use chelant or soft water). Cationic starch improves OBA retention 15–25%. UV light required for fluorescent effect.',
+  vat:'Requires reduction to leuco form (NaOH + sodium dithionite) before adsorption. Excellent light fastness. Mainly specialty/decorative papers. Add at stock chest with controlled reducing conditions; reoxidize on wire.',
+  reactive:'Covalent bond with cellulose under alkaline conditions (Na2CO3). Near-permanent color fastness. High exhaustion but slow reaction. Used in specialty and art papers. pH 10–11 during fixation.',
+  sulfur:'Requires alkaline reducing conditions. Low cost, good color range. Mainly used in lower-grade or colored packaging papers. Limited brightness ceiling.',
+};
+function updateDyeNotes(){
+  setText('dye-notes',DYE_NOTES[document.getElementById('dye-type').value]||'');
+}
+
+function dyePhEff(type,ph){
+  const opt={direct:[5.5,7.5],basic:[4.5,7],oba:[6.5,8.5],vat:[7,9],reactive:[8,11],sulfur:[8,10]};
+  const [lo,hi]=opt[type]||[6,8];
+  const mid=(lo+hi)/2, range=(hi-lo)/2, dist=Math.abs(ph-mid);
+  return Math.max(.1,1-Math.max(0,dist-range/2)/(range*1.5));
+}
+
+function calcDye(){
+  const type=document.getElementById('dye-type').value;
+  const dose=parseFloat(document.getElementById('dye-dose').value)||1;
+  const ph=parseFloat(document.getElementById('dye-ph').value);
+  const temp=parseFloat(document.getElementById('dye-temp').value);
+  const furnishKey=document.getElementById('dye-furnish').value;
+  const alum=parseFloat(document.getElementById('dye-alum').value)||0;
+  const fixative=parseFloat(document.getElementById('dye-fix').value)||0;
+  const starch=parseFloat(document.getElementById('dye-starch').value)||0;
+
+  const f=FURNISH[furnishKey]||FURNISH.bhkp;
+  const phEff=dyePhEff(type,ph);
+  const tempEff=1+(type==='oba'?-.008:.005)*(temp-50);
+  let compFactor=type==='basic'?1:Math.max(.3,1-(f.cd-1)*.18);
+  if(type==='direct'||type==='oba'){compFactor+=fixative*.025+starch*.01;}
+  if(type==='oba'&&alum>5) compFactor*=Math.max(.3,1-(alum-5)*.04);
+  const netFix=Math.min(.98,Math.max(.05,phEff*tempEff*compFactor));
+  const exh=netFix*100;
+  const effl=dose*(1-netFix);
+
+  const fixCol=exh>85?'#3B6D11':exh>70?'#3B6D11':exh>50?'#BA7517':'#A32D2D';
+  setText('dye-fix-pct',exh.toFixed(1)+'%');
+  document.getElementById('dye-fix-pct').style.color=fixCol;
+  setText('dye-effl',effl.toFixed(3));
+  setText('dye-ph-eff',Math.round(phEff*100)+'%');
+  setText('dye-comp-eff',Math.round(compFactor*100)+'%');
+  setWidth('dye-ph-bar',phEff*100);
+  setWidth('dye-comp-bar',Math.min(100,compFactor*100));
+
+  const cat=exh>85?'EXCELLENT':exh>70?'GOOD':exh>50?'MODERATE':'POOR';
+  const recs={
+    EXCELLENT:'Good fixation. Maintain pH and temperature. Monitor effluent color.',
+    GOOD:'Acceptable. Consider cationic fixative for further improvement.',
+    MODERATE:'Add 1–2 kg/t cationic fixative or adjust pH toward optimal range.',
+    POOR:'Poor fixation — significant effluent color load. Check pH, cationic demand, and furnish contamination urgently.'
+  };
+  setAlert('dye-rec',recs[cat],exh>70?'alert-ok':exh>50?'alert-warn':'alert-danger');
+
+  // Dye chart
+  const cv=document.getElementById('dye-chart');
+  if(!cv)return;
+  const phs=[],fixes=[];
+  for(let p=4;p<=9;p+=.2){phs.push(p.toFixed(1));const e=dyePhEff(type,p)*tempEff*compFactor;fixes.push(Math.min(98,Math.max(5,e*100)));}
+  const curIdx=Math.round((ph-4)/.2);
+  if(dyeChart) dyeChart.destroy();
+  dyeChart=new Chart(cv,{type:'line',data:{labels:phs,datasets:[
+    {label:'Fixation%',data:fixes,borderColor:'#A78BFA',borderWidth:1.5,fill:false,tension:.4,pointRadius:0},
+    {label:'Current',data:phs.map((_,i)=>i===curIdx?fixes[i]:null),borderColor:'#f59e0b',pointRadius:phs.map((_,i)=>i===curIdx?5:0),borderWidth:0,fill:false},
+  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{maxTicksLimit:6}},y:{min:0,max:100,ticks:{callback:v=>v+'%'}}}}});
+}
+
+// ── SIZING ────────────────────────────────────────────────────────────────────
+function calcSizing(){
+  const akd=parseFloat(get('sz-akd').value)||0;
+  const asa=parseFloat(get('sz-asa').value)||0;
+  const rosin=parseFloat(get('sz-rosin').value)||0;
+  const alum=parseFloat(get('sz-alum').value)||0;
+  const ph=parseFloat(get('sz-ph').value);
+  const temp=parseFloat(get('sz-temp').value);
+  const dryer=parseFloat(get('sz-dryer').value);
+  const starch=parseFloat(get('sz-starch').value)||0;
+
+  let notes='', eff=0, cobb=200;
+
+  if(akd>0){
+    const phPenalty=ph<6.5?Math.max(0,(ph-4)/2.5):1;
+    const cureEff=Math.min(1,(dryer-55)/40);
+    const doseEff=Math.min(1,akd/.8);
+    eff=Math.round(phPenalty*cureEff*doseEff*92);
+    cobb=Math.round(200-eff*.8);
+    notes=`AKD: pH efficiency ${Math.round(phPenalty*100)}%, cure efficiency ${Math.round(cureEff*100)}%. ${ph<6.5?'WARNING: pH below 6.5 — AKD largely inactive. Raise pH.':''} Requires dryer at ≥65°C for full cure. Starch improves AKD retention.`;
+    if(alum>10) notes+=' High alum dose risks pH drop below AKD threshold.';
+  } else if(asa>0){
+    const phEff=ph>=5.5&&ph<=8?1:Math.max(.3,(ph-4)/1.5);
+    eff=Math.round(phEff*Math.min(1,asa/.5)*88);
+    cobb=Math.round(200-eff*.9);
+    notes=`ASA: Fast cure — efficient at lower temperatures than AKD. pH ${ph>=5.5&&ph<=8?'in range':'out of range (5.5–8.0)'}. Must use within 24h of emulsification to avoid hydrolysis.`;
+  } else if(rosin>0){
+    const phEff=ph<=5.5?1:Math.max(0,(7-ph)/1.5);
+    const alumEff=alum>0?Math.min(1,alum/15):0.1;
+    eff=Math.round(phEff*alumEff*Math.min(1,rosin/12)*85);
+    cobb=Math.round(200-eff*.9);
+    notes=`Rosin/alum system. pH ${ph} — ${ph>5.5?'TOO HIGH: lower to 4–5.5 for rosin sizing.':'in range'}. Alum ${alum} kg/t — ${alum<5?'insufficient — alum required as mordant.':'adequate'}. INCOMPATIBLE with CaCO3 fillers.`;
+  } else {
+    notes='No sizing agent configured.'; eff=5; cobb=350;
+  }
+
+  setText('sz-eff',eff+'%'); setText('sz-cobb',cobb);
+  setAlert('sizing-notes',notes,eff>70?'alert-ok':eff>40?'alert-warn':'alert-danger');
+  setAlert('sizing-rec',eff>80?'Sizing performance excellent.':eff>60?'Good sizing — fine-tune dose.':eff>30?'Poor sizing — check pH and temperature.':'Very poor — verify sizing agent selection and process conditions.',eff>70?'alert-ok':eff>40?'alert-warn':'alert-danger');
+
+  // AKD cure chart
+  const cv=document.getElementById('sizing-chart');
+  if(!cv)return;
+  const temps=[],effs=[];
+  for(let t=50;t<=130;t+=5){temps.push(t+'°C');effs.push(Math.round(Math.min(100,Math.max(0,(t-55)/40*100))))}
+  if(sizingChart)sizingChart.destroy();
+  sizingChart=new Chart(cv,{type:'line',data:{labels:temps,datasets:[{label:'AKD cure eff.',data:effs,borderColor:'#639922',borderWidth:1.5,fill:true,backgroundColor:'rgba(100,153,34,.1)',tension:.3,pointRadius:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{min:0,max:100,ticks:{callback:v=>v+'%'}},x:{ticks:{maxTicksLimit:8}}}}});
+}
+
+// ── STRENGTH ─────────────────────────────────────────────────────────────────
+function calcStrength(){
+  const ph=parseFloat(get('st-ph').value);
+  const temp=parseFloat(get('st-temp').value);
+  const csf=parseFloat(get('st-csf').value);
+  const furnish=get('st-furnish').value;
+  const doses={
+    cstarch:parseFloat(get('st-cstarch').value)||0,
+    astarch:parseFloat(get('st-astarch').value)||0,
+    cmc:parseFloat(get('st-cmc').value)||0,
+    guar:parseFloat(get('st-guar').value)||0,
+    pae:parseFloat(get('st-pae').value)||0,
+    gpam:parseFloat(get('st-gpam').value)||0,
+    polyamide:parseFloat(get('st-polyamide').value)||0,
+    uf:parseFloat(get('st-uf').value)||0,
+    cpam:parseFloat(get('st-cpam').value)||0,
+    debonder:parseFloat(get('st-debonder').value)||0,
+  };
+  const blendMap={bhkp_bskp:[{id:'bhkp',frac:.6},{id:'bskp',frac:.4}],occ:[{id:'occ',frac:1}],tissue_mix:[{id:'bhkp',frac:.7},{id:'bskp',frac:.3}],tmp:[{id:'tmp',frac:.7},{id:'ctmp',frac:.3}]};
+  const blend=blendMap[furnish]||blendMap.bhkp_bskp;
+  const chemDoses={cstarch:doses.cstarch,cpam:doses.cpam,cmc:doses.cmc,pae:doses.pae,gpam:doses.gpam};
+  let bi=calcBondingVal(blend,ph,temp,chemDoses,csf);
+  if(doses.guar>0) bi+=doses.guar*.3;
+  if(doses.astarch>0) bi+=doses.astarch*.25;
+  if(doses.debonder>0) bi-=doses.debonder*8; // debonder reduces bonding (intentional for tissue)
+
+  let wetFactor=doses.pae>0?Math.min(2.5,1+doses.pae*.08):doses.gpam>0?Math.min(1.8,1+doses.gpam*.06):1;
+
+  setText('str-bond',bi.toFixed(1));
+  document.getElementById('str-bond').style.color=bi>70?'#3B6D11':bi>50?'#BA7517':'#A32D2D';
+  setText('str-wet',wetFactor.toFixed(2)+'×');
+  const br=breakRisk(bi);
+  setAlert('str-alert',br.msg,br.cls);
+
+  let notes=[];
+  if(doses.cstarch>0&&doses.cmc>0) notes.push('Cationic starch + CMC: polyelectrolyte complex formation gives synergistic dry strength improvement.');
+  if(doses.pae>0) notes.push(`PAE ${doses.pae} kg/t: permanent wet strength. Curing efficiency improves with dryer temperature.`);
+  if(doses.gpam>0) notes.push(`GPAM ${doses.gpam} kg/t: temporary wet strength — repulpable. Good for recycled or tissue grades.`);
+  if(doses.debonder>0) notes.push(`Debonder ${doses.debonder} kg/t: reduces bonding intentionally for tissue softness. Check tensile limits.`);
+  if(doses.pae>0&&doses.gpam>0) notes.push('PAE + GPAM: competing wet strength mechanisms — PAE provides permanent, GPAM temporary. Usually use one system only.');
+  if(!notes.length) notes.push('Configure strength chemicals to see interaction notes.');
+  setText('str-notes',notes.join(' '));
+}
+
+// ── RETENTION ────────────────────────────────────────────────────────────────
+function calcRetention(){
+  const ph=parseFloat(get('ret-ph').value);
+  const temp=parseFloat(get('ret-temp').value);
+  const fines=parseFloat(get('ret-fines').value)/100;
+  const filler=parseFloat(get('ret-filler').value);
+  const chemDoses={
+    cpam:parseFloat(get('ret-cpam').value)||0,
+    apam:parseFloat(get('ret-apam').value)||0,
+    nano_silica:parseFloat(get('ret-sil').value)||0,
+    bentonite:parseFloat(get('ret-bent').value)||0,
+    pac:parseFloat(get('ret-pac').value)||0,
+    alum:parseFloat(get('ret-alum').value)||0,
+    polydad:parseFloat(get('ret-polydad').value)||0,
+    micro:parseFloat(get('ret-micro').value)||0,
+    cstarch:parseFloat(get('ret-cstarch').value)||0,
+    drain:parseFloat(get('ret-drain').value)||0,
+  };
+
+  const blend=[{id:'bhkp',frac:.5},{id:'bskp',frac:.3},{id:'occ',frac:.2}];
+  const {zeta}=calcZetaVal(blend,ph,temp,{cstarch:chemDoses.cstarch,cpam:chemDoses.cpam,pac:chemDoses.pac,alum:chemDoses.alum,polydad:chemDoses.polydad});
+  const chargeOpt=Math.max(0,1-Math.abs(zeta+3)/15);
+  let fpr=40+chargeOpt*30;
+  if(chemDoses.cpam>0) fpr+=Math.min(15,chemDoses.cpam*30);
+  if(chemDoses.nano_silica>0||chemDoses.bentonite>0||chemDoses.micro>0) fpr+=10;
+  if(chemDoses.apam>0&&chemDoses.cpam>0) fpr+=8; // dual polymer
+  fpr=Math.min(96,fpr);
+
+  let drainRate=70+Math.max(0,chemDoses.drain*5)+Math.max(0,chemDoses.polydad*4);
+  drainRate=Math.min(110,drainRate);
+
+  setText('ret-fpr',fpr.toFixed(1)+'%');
+  document.getElementById('ret-fpr').style.color=fpr>80?'#3B6D11':fpr>60?'#BA7517':'#A32D2D';
+  setText('ret-dr',drainRate+'%');
+
+  setAlert('ret-rec',`Zeta ${zeta} mV — ${zetaClass(zeta).label}. FPR ${fpr.toFixed(1)}%. ${fpr<60?'Increase cationic charge or add microparticle system.':fpr<75?'Good retention — fine-tune polymer dose.':'Excellent retention system.'}`,fpr>75?'alert-ok':fpr>55?'alert-warn':'alert-danger');
+
+  const dual=chemDoses.cpam>0&&chemDoses.apam>0;
+  const mp=chemDoses.nano_silica>0||chemDoses.bentonite>0||chemDoses.micro>0;
+  const systems=[];
+  if(dual&&mp) systems.push('Three-component (C-PAM + A-PAM + microparticle)');
+  else if(dual) systems.push('Dual-polymer (C-PAM + A-PAM)');
+  else if(chemDoses.cpam>0&&mp) systems.push('Microparticle (C-PAM + microparticle)');
+  else if(chemDoses.cpam>0) systems.push('Single C-PAM polymer');
+  else systems.push('Coagulant-only (charge neutralization)');
+  setText('ret-class',`System type: ${systems[0]}. ${mp?'Microparticle component provides post-shear reflocculation. ':''}${chemDoses.drain>0?'Drainage aid reduces water retention of fines.':''}`);
+}
+
+// ── ENZYMES ───────────────────────────────────────────────────────────────────
+const ENZ_NOTES={
+  cellulase:'Optimal: pH 4.5–6.5, temp 40–55°C. Inactivated above 70°C. Apply before refining for drainage aid effect; after refining for selective fibrillation. Dose 50–500 g/t. Reduces energy demand 5–15%. Overdose degrades fiber strength.',
+  xylanase:'Optimal: pH 5–8, temp 50–65°C. Used in bleaching sequence to reduce Cl₂ demand by 15–20%. Also effective in DIP for partial deinking. Dose 50–300 g/t. Highly specific to xylan — minimal cellulose attack.',
+  amylase:'Optimal: pH 6–8, temp 55–70°C. Degrades starch in whitewater, felt, and broke. Prevents starch-related cationic demand buildup. Dose 20–100 g/t. Critical in mills using high starch loads.',
+  laccase:'Optimal: pH 6–8, temp 40–55°C. Mediator (e.g. HBT) required for effective lignin oxidation. Used in TCF bleaching. Also improves fiber-to-fiber bonding in linerboard and fluting.',
+  lipase:'Optimal: pH 7.5–8.5, temp 35–55°C. Converts triglyceride pitch to fatty acids (more water-soluble). Most effective with mechanical pulp (high triglyceride content). Dose 100–500 g/t applied at pulper or storage chest.',
+  pectinase:'Optimal: pH 4.5–7, temp 35–50°C. Used for hemp and flax bast fiber retting and degumming. Removes pectin cement between fibers. Reduces refining energy for bast fibers by 20–30%.',
+  protease:'Optimal: pH 6–9, temp 35–55°C. Degrades proteinaceous stickies in deinking. Removes protein-based contaminants from felt.',
+};
+const BIO_NOTES={
+  isothiazolinone:'Broad spectrum. Effective at 20–100 ppm. Rotate with other biocides to prevent resistance. PH 6–8 optimal. Avoid overdose — irritant. May cause felt degradation at high doses.',
+  glutaraldehyde:'Broad spectrum, fast-acting. Effective 50–200 ppm. pH 7–9 optimal. Cross-reacts with protein-based chemicals. Good for slug dosing.',
+  quaternary:'PolyDADMAC-type quaternary ammonium. Cationic — consumed by anionic furnish. Effective 30–150 ppm. pH 5–8. Also provides some cationic charge neutralization.',
+  h2o2:'Oxidizing biocide. pH>7 increases activity. Fast-acting but short residual. Decomposes rapidly. Effective at 50–500 ppm. Use at controlled doses — can affect OBA and starch.',
+  clo2:'Strong oxidizing biocide. Very effective 10–50 ppm. Generated on-site. pH 4–7 optimal. Sensitive to organics (high demand). INCOMPATIBLE with cellulase and other enzymes.',
+  bronopol:'Broad spectrum. Effective 20–100 ppm pH 6–9. Releases formaldehyde at high temp/pH. Restricted in some regions.',
+  thione:'Non-oxidizing. Effective 20–80 ppm. pH 6.5–8. Fast-acting. Limited persistence — use slug dosing.',
+};
+function updateEnzNotes(){ setText('enz-notes',ENZ_NOTES[get('enz-type')?.value]||'Select enzyme'); }
+function updateBioNotes(){ setText('bio-notes',BIO_NOTES[get('bio-type')?.value]||'Select biocide'); }
+
+function calcEnzyme(){
+  const type=get('enz-type').value;
+  const dose=parseFloat(get('enz-dose').value)||200;
+  const time=parseFloat(get('enz-time').value)||30;
+  const temp=parseFloat(get('enz-temp').value);
+  const ph=parseFloat(get('enz-ph').value);
+
+  const phRanges={cellulase:[4.5,6.5],xylanase:[5,8],amylase:[6,8],laccase:[6,8],lipase:[7.5,8.5],pectinase:[4.5,7],protease:[6,9]};
+  const tempRanges={cellulase:[40,55],xylanase:[50,65],amylase:[55,70],laccase:[40,55],lipase:[35,55],pectinase:[35,50],protease:[35,55]};
+  const [phLo,phHi]=phRanges[type]||[5,8];
+  const [tLo,tHi]=tempRanges[type]||[40,60];
+  const phOk=ph>=phLo&&ph<=phHi;
+  const tempOk=temp>=tLo&&temp<=tHi;
+  const tempInact=temp>tHi+15;
+  const timeEff=Math.min(1,time/30);
+  const doseEff=Math.min(1,dose/300);
+  const eff=Math.round((phOk?1:.4)*(tempInact?0:(tempOk?1:.6))*timeEff*doseEff*100);
+
+  const msg=tempInact?`ENZYME INACTIVATED — temperature ${temp}°C exceeds inactivation threshold for ${type}. Lower to ${tLo}–${tHi}°C.`:
+    !phOk?`pH ${ph} outside optimal ${phLo}–${phHi} for ${type}. Efficiency reduced to ${eff}%. Adjust pH.`:
+    `${type} enzyme active — estimated efficiency ${eff}%. ${tempOk?'Temperature in range.':''} Contact time: ${time} min.`;
+  setAlert('enz-result',msg,eff>70?'alert-ok':eff>30?'alert-warn':'alert-danger');
+}
+
+function calcBiocide(){
+  const type=get('bio-type').value;
+  const dose=parseFloat(get('bio-dose').value)||50;
+  const ph=parseFloat(get('bio-ph').value);
+  const temp=parseFloat(get('bio-temp').value);
+  const freq=get('bio-freq').value;
+  const phRanges={isothiazolinone:[6,8],glutaraldehyde:[7,9],quaternary:[5,8],h2o2:[7,9],clo2:[4,7],bronopol:[6,9],thione:[6.5,8]};
+  const [lo,hi]=phRanges[type]||[6,8];
+  const phOk=ph>=lo&&ph<=hi;
+  const doseSuff=dose>=(type==='clo2'?10:type==='h2o2'?50:30);
+  const msg=`${type}: ${phOk?'pH in range.':'WARNING — pH outside optimal range '+lo+'–'+hi+'.'} Dose ${dose} ppm — ${doseSuff?'adequate':'consider increasing dose'}. ${freq==='continuous'?'Continuous dosing — watch for resistance buildup. Rotate biocides regularly.':freq==='slug'?'Slug dosing — effective for sessile biofilm control.':''} ${type==='clo2'?'Do NOT use near enzyme systems.':''} ${temp>70?'High temperature may reduce efficacy.':''}`;
+  setAlert('bio-result',msg,phOk&&doseSuff?'alert-ok':'alert-warn');
+}
+
+// ── SPECIALTY ──────────────────────────────────────────────────────────────────
+function calcSpecialty(){
+  const vals={
+    defoam:parseFloat(get('sp-defoam').value)||0,
+    pitch:parseFloat(get('sp-pitch').value)||0,
+    fix:parseFloat(get('sp-fix').value)||0,
+    disp:parseFloat(get('sp-disp').value)||0,
+    scale:parseFloat(get('sp-scale').value)||0,
+    corr:parseFloat(get('sp-corr').value)||0,
+    felt:parseFloat(get('sp-felt').value)||0,
+    wire:parseFloat(get('sp-wire').value)||0,
+    edta:parseFloat(get('sp-edta').value)||0,
+    surf:parseFloat(get('sp-surf').value)||0,
+    fr:parseFloat(get('sp-fr').value)||0,
+    barrier:parseFloat(get('sp-barrier').value)||0,
+  };
+  const items=[
+    [vals.defoam,'Defoamer','Overdose risk if >1 kg/t — hydrophobic spots and sizing interference.',vals.defoam>.8?'warn':'ok'],
+    [vals.pitch,'Pitch/talc control','Talc passivates wood pitch. For severe pitch problems consider lipase enzyme pre-treatment.',vals.pitch>0?'ok':'neutral'],
+    [vals.fix,'Cationic pitch fixative','Neutralizes colloidal wood resin. Dose based on cationic demand titration.',vals.fix>0?'ok':'neutral'],
+    [vals.scale,'Scale inhibitor','Phosphonate inhibitors effective at threshold doses (2–10 ppm). Monitor heat exchanger differential pressure.',vals.scale>0?'ok':'neutral'],
+    [vals.felt,'Felt conditioner','Maintains felt permeability. Prevents pitch and fines blinding. Critical for drainage and dewatering efficiency.',vals.felt>0?'ok':'neutral'],
+    [vals.fr,'Flame retardant','Typically aluminum sulfate, borax, or organohalogen. pH effects must be considered. Check regulatory requirements.',vals.fr>0?'warn':'neutral'],
+    [vals.barrier,'Barrier coating aid','Used in food-contact packaging — ensure regulatory compliance (FDA, EU). Check compatibility with sizing system.',vals.barrier>0?'warn':'neutral'],
+    [vals.edta,'EDTA/chelant','Sequester Ca²⁺ and Mg²⁺ competing with OBA and dyes. Also improves bleaching efficiency. Anionic — monitor cationic demand impact.',vals.edta>0?'ok':'neutral'],
+  ];
+  const html=items.filter(([v])=>v>0).map(([v,name,note,cls])=>`
+    <div class="alert ${cls==='ok'?'alert-ok':cls==='warn'?'alert-warn':'alert-neutral'}">
+      <strong>${name}</strong> (${v} ${v<10?'kg/t':'ppm'}): ${note}
+    </div>`).join('') || '<div class="alert alert-neutral">No specialty chemicals configured</div>';
+  document.getElementById('specialty-results').innerHTML=html;
+}
+
+// ── REFERENCE GRID ────────────────────────────────────────────────────────────
+const TYPE_COLORS={retention:'badge-info',retention_strength:'badge-info',sizing:'badge-ok',wet_strength:'badge-warn',dry_strength:'badge-ok',coagulant:'badge-warn',dye:'badge-neutral',filler:'badge-neutral',filler_pitch:'badge-neutral',process_aid:'badge-neutral',enzyme:'badge-info'};
+let refFilter='all';
+function filterRef(type){refFilter=type;buildRefGrid();}
+function buildRefGrid(){
+  const filt=refFilter==='all'?CHEMICALS:CHEMICALS.filter(c=>c.type.includes(refFilter)||c.id.includes(refFilter));
+  const filters=['all','retention','sizing','wet_strength','dry_strength','coagulant','dye','filler','enzyme','process_aid'];
+  document.getElementById('ref-filters').innerHTML=filters.map(f=>`<button class="btn btn-sm ${refFilter===f?'btn-primary':''}" onclick="filterRef('${f}')">${f.replace('_',' ')}</button>`).join('');
+  document.getElementById('ref-grid').innerHTML=filt.map(c=>`
+  <div class="ref-card">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px">
+      <div class="ref-card-name">${c.name}</div>
+      <span class="badge ${TYPE_COLORS[c.type]||'badge-neutral'}" style="margin-left:6px;white-space:nowrap">${c.type.replace('_',' ')}</span>
+    </div>
+    <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:6px">
+      <span class="badge badge-neutral">${c.charge}</span>
+      <span class="badge badge-neutral">pH ${c.phOpt[0]}–${c.phOpt[1]}</span>
+      <span class="badge badge-neutral">${c.dose[0]}–${c.dose[1]} kg/t</span>
+    </div>
+    <div class="ref-card-sub">${c.notes}</div>
+    <div class="ref-card-mech">${c.mech}</div>
+  </div>`).join('');
+}
+
+// ── INTERACTIONS ───────────────────────────────────────────────────────────────
+function buildCompatGrid(){
+  const issues=[
+    {a:'Rosin sizing',b:'GCC / PCC filler',level:'danger',msg:'Acid pH dissolves CaCO3 — use kaolin'},
+    {a:'AKD',b:'Low pH / high alum',level:'danger',msg:'pH<6.5 deactivates AKD — check alum dose'},
+    {a:'Direct dye',b:'Basic (cationic) dye',level:'danger',msg:'Immediate precipitation on mixing'},
+    {a:'Biocide (ClO2)',b:'Cellulase enzyme',level:'danger',msg:'Oxidizing biocide denatures enzyme'},
+    {a:'C-PAM',b:'A-PAM',level:'ok',msg:'Classic dual-polymer system — excellent synergy'},
+    {a:'Cationic starch',b:'C-PAM',level:'ok',msg:'Strong synergy — both improve retention'},
+    {a:'Silicone defoamer',b:'OBA',level:'warn',msg:'Silicone deposits reduce OBA brightness'},
+    {a:'PAE wet strength',b:'Cellulase',level:'warn',msg:'Do not dose simultaneously — enzyme attacks anchoring sites'},
+    {a:'OBA',b:'Alum / low pH',level:'warn',msg:'pH<6.5 severely reduces OBA efficiency'},
+    {a:'Cationic starch',b:'GCC filler',level:'ok',msg:'Starch improves GCC retention via bridging'},
+    {a:'AKD',b:'ASA',level:'warn',msg:'Competing systems — use one only'},
+    {a:'PAC',b:'AKD',level:'ok',msg:'PAC preferred coagulant in AKD systems — less pH drop than alum'},
+  ];
+  document.getElementById('compat-grid').innerHTML=issues.map(i=>`
+  <div class="card-sm" style="border-left:2px solid ${i.level==='danger'?'var(--tdanger)':i.level==='warn'?'var(--twarn)':'var(--tsuccess)'}">
+    <div style="font-size:11px;font-weight:500;color:var(--t);margin-bottom:3px">${i.a} + ${i.b}</div>
+    <div style="font-size:11px;color:var(--t2)">${i.msg}</div>
+    <span class="badge ${i.level==='danger'?'badge-danger':i.level==='warn'?'badge-warn':'badge-ok'}" style="margin-top:4px">${i.level}</span>
+  </div>`).join('');
+}
+
+function calcInteraction(){
+  const a=get('int-a').value, b=get('int-b').value;
+  const ph=parseFloat(get('int-ph').value);
+  const temp=parseFloat(get('int-temp').value);
+  const key=a+'+'+b;
+  const keyRev=b+'+'+a;
+  const idata=INTERACTIONS[key]||INTERACTIONS[keyRev];
+
+  let html;
+  if(idata){
+    html=`<div class="alert ${idata.level==='danger'?'alert-danger':idata.level==='warning'?'alert-warn':'alert-ok'}">
+      <div style="font-weight:500;margin-bottom:4px">${idata.title}</div>
+      <div style="font-size:12px">${idata.msg}</div>
+      <div style="font-size:11px;color:inherit;margin-top:6px;opacity:.8">System conditions: pH ${ph}, ${temp}°C</div>
+    </div>`;
+  } else {
+    html=`<div class="alert alert-neutral">
+      <div style="font-weight:500;margin-bottom:4px">${a.replace('_',' ')} + ${b.replace('_',' ')}</div>
+      <div style="font-size:12px">No specific interaction data for this combination. Generally compatible — monitor zeta potential and drainage when dosing both. Ensure dosing points are well-separated to prevent direct contact of concentrated solutions.</div>
+    </div>`;
+  }
+  document.getElementById('interaction-result').innerHTML=html;
+}
+
+// ── UTILS ─────────────────────────────────────────────────────────────────────
+function get(id){return document.getElementById(id);}
+function setText(id,v){const e=get(id);if(e)e.textContent=v;}
+function setAlert(id,msg,cls){const e=get(id);if(!e)return;e.textContent=msg;e.className='alert '+(cls||'alert-neutral');}
+function setWidth(id,pct){const e=get(id);if(e)e.style.width=Math.min(100,Math.max(0,pct))+'%';}
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+setTimeout(()=>{
+  initMixCanvas();
+  buildRefGrid();
+  buildCompatGrid();
+  updateDyeNotes();
+  updateEnzNotes();
+  updateBioNotes();
+  drawZetaChart([{id:'bhkp',frac:.6},{id:'bskp',frac:.4}],52,{cstarch:8,cpam:.2,pac:5},0.3,800,7.0);
+  setTimeout(()=>{calcSizing(); runFullAnalysis();},200);
+},100);
+</script>
+</body></html>
